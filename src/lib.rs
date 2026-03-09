@@ -1,7 +1,9 @@
+pub mod derive;
 pub mod error;
 pub mod io;
 pub mod model;
 
+pub use derive::stance::derive_stance;
 pub use error::SenateSimError;
 pub use model::dynamic_state::PublicPosition;
 pub use model::identity::{Party, SenateClass};

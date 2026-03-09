@@ -1,5 +1,5 @@
 use senate_simulator::{
-    ProceduralPosture, PublicPosition, SenatorScenario, SenatorStance, StanceLabel,
+    SenatorScenario, derive_stance,
     io::json::{
         load_legislative_context_from_path, load_legislative_object_from_path,
         load_senator_from_path, to_pretty_json,
@@ -17,31 +17,13 @@ fn main() {
         load_legislative_context_from_path,
     );
 
-    let stance = SenatorStance {
-        senator_id: senator.identity.senator_id.clone(),
-        object_id: legislative_object.object_id.clone(),
-        context_id: Some("ctx_119_senate_cloture".to_string()),
-        substantive_support: 0.64,
-        procedural_support: 0.71,
-        public_support: 0.59,
-        negotiability: 0.76,
-        rigidity: 0.28,
-        defection_probability: 0.22,
-        absence_probability: 0.03,
-        stance_label: StanceLabel::LeanSupport,
-        procedural_posture: ProceduralPosture::SupportCloture,
-        public_position: PublicPosition::Negotiating,
-        top_factors: vec![
-            "high alignment with leadership energy agenda".to_string(),
-            "permitting provisions improve home-state infrastructure outlook".to_string(),
-            "still negotiating labor-side implementation details".to_string(),
-        ],
+    let stance = match derive_stance(&senator, &legislative_object, &context) {
+        Ok(stance) => stance,
+        Err(error) => {
+            eprintln!("Failed to derive senator stance: {error}");
+            std::process::exit(1);
+        }
     };
-
-    if let Err(error) = stance.validate() {
-        eprintln!("Failed to validate senator stance: {error}");
-        std::process::exit(1);
-    }
 
     let scenario = SenatorScenario {
         senator,
