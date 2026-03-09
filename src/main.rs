@@ -1,106 +1,108 @@
-use serde::Serialize;
-
-use senate_simulator::{
-    LegislativeContext, ProceduralStage, SimulationState, SimulationStep, TerminationReason,
-    build_synthetic_senate,
-    io::json::{
-        load_legislative_context_from_path, load_legislative_object_from_path, to_pretty_json,
-    },
-    rollout,
-};
-
-#[derive(Debug, Serialize)]
-struct DemoOutput {
-    initial_state: SimulationState,
-    final_context: LegislativeContext,
-    final_stage: ProceduralStage,
-    terminated_reason: TerminationReason,
-    steps: Vec<SimulationStep>,
-}
+use senate_simulator::{BacktestResult, DataSnapshot, run_backtest, run_daily_ingestion};
 
 fn main() {
-    let legislative_object = load_or_exit(
-        "examples/legislative_object_example.json",
-        load_legislative_object_from_path,
-    );
-    let context = load_or_exit(
-        "examples/legislative_context_example.json",
-        load_legislative_context_from_path,
-    );
-
-    let initial_state = SimulationState {
-        legislative_object,
-        context,
-        roster: build_synthetic_senate(),
-        step_index: 0,
-        last_event: None,
-        consecutive_no_movement: 0,
-        days_elapsed: 0,
-        cloture_attempts: 0,
+    let args = std::env::args().skip(1).collect::<Vec<_>>();
+    let result = match args.first().map(String::as_str) {
+        Some("ingest") => run_ingest_command(&args[1..]),
+        Some("backtest") => run_backtest_command(&args[1..]),
+        _ => run_default_demo(),
     };
 
-    let trajectory = match rollout(&initial_state, 5) {
-        Ok(trajectory) => trajectory,
-        Err(error) => {
-            eprintln!("Failed to run rollout: {error}");
-            std::process::exit(1);
-        }
-    };
-
-    println!(
-        "Synthetic Senate rollout: roster={}, steps={}, terminated={:?}",
-        initial_state.roster.len(),
-        trajectory.steps.len(),
-        trajectory.terminated_reason
-    );
-    for step in &trajectory.steps {
-        println!(
-            "Step {}: {:?} -> {} ({:.2})",
-            step.step_index + 1,
-            step.starting_stage,
-            step.predicted_event,
-            step.confidence
-        );
-        println!(
-            "  Majority viable: {} | Cloture viable: {} | Support: {}+{} | Undecided: {}",
-            step.analysis_summary.simple_majority_viable,
-            step.analysis_summary.cloture_viable,
-            step.analysis_summary.likely_support_count,
-            step.analysis_summary.lean_support_count,
-            step.analysis_summary.undecided_count
-        );
-        for reason in &step.top_reasons {
-            println!("  - {reason}");
-        }
-    }
-    println!("Terminated: {:?}", trajectory.terminated_reason);
-
-    let output = DemoOutput {
-        initial_state,
-        final_context: trajectory.final_state.context.clone(),
-        final_stage: trajectory.final_state.context.procedural_stage.clone(),
-        terminated_reason: trajectory.terminated_reason.clone(),
-        steps: trajectory.steps.clone(),
-    };
-
-    match to_pretty_json(&output) {
-        Ok(json) => println!("{json}"),
-        Err(error) => {
-            eprintln!("Failed to serialize rollout output: {error}");
-            std::process::exit(1);
-        }
+    if let Err(error) = result {
+        eprintln!("{error}");
+        std::process::exit(1);
     }
 }
 
-fn load_or_exit<T, F>(path: &'static str, loader: F) -> T
-where
-    F: FnOnce(&'static str) -> Result<T, senate_simulator::SenateSimError>,
-{
-    match loader(path) {
-        Ok(value) => value,
-        Err(error) => {
-            eprintln!("Failed to load resource from {path}: {error}");
-            std::process::exit(1);
+fn run_ingest_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let run_date = parse_date(date)?;
+    let snapshot = run_daily_ingestion(run_date)?;
+    print_snapshot_summary(&snapshot);
+    Ok(())
+}
+
+fn run_backtest_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let object_id = parse_date_arg(args, "--object-id").unwrap_or("s_2100");
+    let snapshot_date = parse_date(date)?;
+    let result = run_backtest(snapshot_date, object_id)?;
+    print_backtest_summary(&result);
+    Ok(())
+}
+
+fn run_default_demo() -> Result<(), senate_simulator::SenateSimError> {
+    let run_date = parse_date("2026-03-09")?;
+    let snapshot = run_daily_ingestion(run_date)?;
+    print_snapshot_summary(&snapshot);
+
+    let result = run_backtest(run_date, "s_2100")?;
+    print_backtest_summary(&result);
+    Ok(())
+}
+
+fn parse_date(value: &str) -> Result<chrono::NaiveDate, senate_simulator::SenateSimError> {
+    chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d").map_err(|_| {
+        senate_simulator::SenateSimError::Validation {
+            field: "cli.date",
+            message: format!("invalid date {value}, expected YYYY-MM-DD"),
         }
+    })
+}
+
+fn parse_date_arg<'a>(args: &'a [String], flag: &str) -> Option<&'a str> {
+    args.windows(2)
+        .find(|window| window[0] == flag)
+        .map(|window| window[1].as_str())
+}
+
+fn print_snapshot_summary(snapshot: &DataSnapshot) {
+    println!(
+        "Ingested snapshot {}: senators={}, legislation={}, actions={}, manifests={}",
+        snapshot.snapshot_date,
+        snapshot.roster_records.len(),
+        snapshot.legislative_records.len(),
+        snapshot.action_records.len(),
+        snapshot.source_manifests.len()
+    );
+    for manifest in &snapshot.source_manifests {
+        println!(
+            "  {}: records={}, hash={}, as_of={}",
+            manifest.source_name, manifest.record_count, manifest.content_hash, manifest.as_of_date
+        );
+    }
+}
+
+fn print_backtest_summary(result: &BacktestResult) {
+    println!(
+        "Backtest {} {}: predicted={:?}, actual={:?}, top1={}, topk={}, confidence={:.2}",
+        result.snapshot_date,
+        result.object_id,
+        result.predicted_next_event,
+        result.actual_next_event,
+        result.match_top_1,
+        result.match_top_k,
+        result.prediction_confidence.unwrap_or(0.0)
+    );
+    for note in &result.notes {
+        println!("  - {note}");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_date_arg;
+
+    #[test]
+    fn parses_flag_values() {
+        let args = vec![
+            "--date".to_string(),
+            "2026-03-09".to_string(),
+            "--object-id".to_string(),
+            "s_2100".to_string(),
+        ];
+        assert_eq!(parse_date_arg(&args, "--date"), Some("2026-03-09"));
+        assert_eq!(parse_date_arg(&args, "--object-id"), Some("s_2100"));
+        assert_eq!(parse_date_arg(&args, "--missing"), None);
     }
 }

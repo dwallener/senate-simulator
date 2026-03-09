@@ -1,3 +1,5 @@
+pub mod backtest_result;
+pub mod data_snapshot;
 pub mod dynamic_state;
 pub mod floor_action_assessment;
 pub mod identity;
@@ -5,7 +7,9 @@ pub mod issue_preferences;
 pub mod legislative;
 pub mod legislative_context;
 pub mod next_event_prediction;
+pub mod normalized_records;
 pub mod procedural;
+pub mod raw_records;
 pub mod scenario;
 pub mod senate_analysis;
 pub mod senate_event;
