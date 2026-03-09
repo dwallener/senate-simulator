@@ -12,9 +12,14 @@ use crate::{
         },
         timeline::build_historical_timelines,
     },
+    features::{
+        materialize::snapshot_with_features_to_senators,
+        senator::build_senator_features_for_snapshot,
+        windows::FeatureWindowConfig,
+    },
     ingest::{
         load_snapshot, run_daily_ingestion_with_roots, snapshot_to_contexts,
-        snapshot_to_legislative_objects, snapshot_to_senators,
+        snapshot_to_legislative_objects,
     },
     model::{
         data_snapshot::DataSnapshot,
@@ -62,7 +67,9 @@ pub fn evaluate_snapshot_examples(
     snapshot: &DataSnapshot,
     examples: &[EvaluationExample],
 ) -> Result<EvaluationSummary, SenateSimError> {
-    let senators = snapshot_to_senators(snapshot)?;
+    let features =
+        build_senator_features_for_snapshot(snapshot, &snapshot.vote_records, &FeatureWindowConfig::default())?;
+    let senators = snapshot_with_features_to_senators(snapshot, &features)?;
     let legislative_objects = snapshot_to_legislative_objects(snapshot)?;
     let contexts = snapshot_to_contexts(snapshot)?;
 
@@ -208,6 +215,7 @@ mod tests {
                 as_of_date: NaiveDate::from_ymd_opt(2026, 3, 9).unwrap(),
             }],
             action_records: vec![],
+            vote_records: vec![],
             source_manifests: vec![SourceManifest {
                 source_name: "test".to_string(),
                 fetched_at: DateTime::<Utc>::from_timestamp(1_700_000_000, 0).unwrap(),

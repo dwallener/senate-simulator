@@ -17,6 +17,7 @@ use crate::{
         legislative_context::LegislativeContext,
         normalized_records::{
             NormalizedActionRecord, NormalizedLegislativeRecord, NormalizedSenatorRecord,
+            NormalizedVoteRecord,
         },
         procedural::Procedural,
         senator::Senator,
@@ -34,14 +35,17 @@ pub fn build_snapshot(
     raw_roster: &[crate::model::raw_records::RawRosterRecord],
     raw_legislation: &[crate::model::raw_records::RawLegislativeRecord],
     raw_actions: &[crate::model::raw_records::RawActionRecord],
+    raw_votes: &[crate::model::raw_records::RawVoteRecord],
     roster_records: Vec<NormalizedSenatorRecord>,
     legislative_records: Vec<NormalizedLegislativeRecord>,
     action_records: Vec<NormalizedActionRecord>,
+    vote_records: Vec<NormalizedVoteRecord>,
 ) -> Result<DataSnapshot, SenateSimError> {
     let manifests = vec![
         manifest_for("roster", run_date, raw_roster)?,
         manifest_for("legislation", run_date, raw_legislation)?,
         manifest_for("actions", run_date, raw_actions)?,
+        manifest_for("votes", run_date, raw_votes)?,
     ];
 
     let snapshot = DataSnapshot {
@@ -51,6 +55,7 @@ pub fn build_snapshot(
         roster_records,
         legislative_records,
         action_records,
+        vote_records,
         source_manifests: manifests,
     };
     snapshot.validate()?;
@@ -63,11 +68,13 @@ pub fn persist_normalized_records(
     roster_records: &[NormalizedSenatorRecord],
     legislative_records: &[NormalizedLegislativeRecord],
     action_records: &[NormalizedActionRecord],
+    vote_records: &[NormalizedVoteRecord],
 ) -> Result<(), SenateSimError> {
     let base = normalized_storage_dir(data_root, run_date);
     write_json_file(&base.join("senators.json"), roster_records)?;
     write_json_file(&base.join("legislation.json"), legislative_records)?;
     write_json_file(&base.join("actions.json"), action_records)?;
+    write_json_file(&base.join("votes.json"), vote_records)?;
     Ok(())
 }
 
@@ -331,6 +338,7 @@ mod tests {
         assert_eq!(snapshot.roster_records.len(), 4);
         assert_eq!(snapshot.legislative_records.len(), 1);
         assert_eq!(snapshot.action_records.len(), 2);
+        assert_eq!(snapshot.vote_records.len(), 16);
     }
 
     #[test]
@@ -409,7 +417,7 @@ mod tests {
             &temp_dir,
         )
         .unwrap();
-        assert_eq!(snapshot.source_manifests.len(), 3);
+        assert_eq!(snapshot.source_manifests.len(), 4);
         assert!(
             snapshot
                 .source_manifests
@@ -431,5 +439,6 @@ mod tests {
             load_snapshot(&temp_dir, NaiveDate::from_ymd_opt(2026, 3, 10).unwrap()).unwrap();
         assert_eq!(snapshot.legislative_records, loaded.legislative_records);
         assert_eq!(loaded.action_records.len(), 3);
+        assert_eq!(loaded.vote_records.len(), 20);
     }
 }

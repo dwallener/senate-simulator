@@ -8,9 +8,10 @@ use crate::{
         legislative_context::{Chamber, ProceduralStage},
         normalized_records::{
             NormalizedActionCategory, NormalizedActionRecord, NormalizedLegislativeRecord,
-            NormalizedSenatorRecord,
+            NormalizedSenatorRecord, NormalizedVoteRecord, ProceduralKind, VoteCategory,
+            VotePosition,
         },
-        raw_records::{RawActionRecord, RawLegislativeRecord, RawRosterRecord},
+        raw_records::{RawActionRecord, RawLegislativeRecord, RawRosterRecord, RawVoteRecord},
     },
 };
 
@@ -37,6 +38,12 @@ pub fn normalize_actions(
     raw_records: &[RawActionRecord],
 ) -> Result<Vec<NormalizedActionRecord>, SenateSimError> {
     raw_records.iter().map(normalize_action_record).collect()
+}
+
+pub fn normalize_votes(
+    raw_records: &[RawVoteRecord],
+) -> Result<Vec<NormalizedVoteRecord>, SenateSimError> {
+    raw_records.iter().map(normalize_vote_record).collect()
 }
 
 fn normalize_roster_record(
@@ -104,6 +111,28 @@ fn normalize_action_record(
         chamber: record.chamber,
         action_text: record.action_text.clone(),
         category: infer_action_category(record.action_type.as_deref(), &record.action_text),
+        as_of_date: record.as_of_date,
+    };
+    normalized.validate()?;
+    Ok(normalized)
+}
+
+fn normalize_vote_record(record: &RawVoteRecord) -> Result<NormalizedVoteRecord, SenateSimError> {
+    let normalized = NormalizedVoteRecord {
+        vote_id: sanitize_identifier(&record.source_vote_id),
+        vote_date: record.vote_date,
+        senator_id: format!("real_{}", sanitize_identifier(&record.senator_id)),
+        senator_name: record.senator_name.clone(),
+        object_id: record.object_id.as_ref().map(|value| sanitize_identifier(value)),
+        vote_category: parse_vote_category(&record.vote_category),
+        vote_position: parse_vote_position(&record.vote_position),
+        party_at_time: record.party_at_time.clone(),
+        policy_domain: record.policy_domain.clone(),
+        is_procedural: record.is_procedural,
+        procedural_kind: record
+            .procedural_kind
+            .as_deref()
+            .map(parse_procedural_kind),
         as_of_date: record.as_of_date,
     };
     normalized.validate()?;
@@ -294,6 +323,63 @@ fn infer_action_category(action_type: Option<&str>, action_text: &str) -> Normal
         NormalizedActionCategory::Stall
     } else {
         NormalizedActionCategory::Other
+    }
+}
+
+fn parse_vote_position(value: &str) -> VotePosition {
+    if value.eq_ignore_ascii_case("yea") || value.eq_ignore_ascii_case("yes") {
+        VotePosition::Yea
+    } else if value.eq_ignore_ascii_case("nay") || value.eq_ignore_ascii_case("no") {
+        VotePosition::Nay
+    } else if value.eq_ignore_ascii_case("present") {
+        VotePosition::Present
+    } else if value.eq_ignore_ascii_case("notvoting")
+        || value.eq_ignore_ascii_case("not_voting")
+        || value.eq_ignore_ascii_case("absent")
+    {
+        VotePosition::NotVoting
+    } else {
+        VotePosition::Unknown
+    }
+}
+
+fn parse_vote_category(value: &str) -> VoteCategory {
+    if value.eq_ignore_ascii_case("passage") {
+        VoteCategory::Passage
+    } else if value.eq_ignore_ascii_case("cloture") {
+        VoteCategory::Cloture
+    } else if value.eq_ignore_ascii_case("motiontoproceed")
+        || value.eq_ignore_ascii_case("motion_to_proceed")
+    {
+        VoteCategory::MotionToProceed
+    } else if value.eq_ignore_ascii_case("amendment") {
+        VoteCategory::Amendment
+    } else if value.eq_ignore_ascii_case("nomination") {
+        VoteCategory::Nomination
+    } else if value.eq_ignore_ascii_case("procedural") {
+        VoteCategory::Procedural
+    } else {
+        VoteCategory::Other
+    }
+}
+
+fn parse_procedural_kind(value: &str) -> ProceduralKind {
+    if value.eq_ignore_ascii_case("cloture") {
+        ProceduralKind::Cloture
+    } else if value.eq_ignore_ascii_case("motiontoproceed")
+        || value.eq_ignore_ascii_case("motion_to_proceed")
+    {
+        ProceduralKind::MotionToProceed
+    } else if value.eq_ignore_ascii_case("amendmentprocess")
+        || value.eq_ignore_ascii_case("amendment_process")
+    {
+        ProceduralKind::AmendmentProcess
+    } else if value.eq_ignore_ascii_case("table") {
+        ProceduralKind::Table
+    } else if value.eq_ignore_ascii_case("recommit") {
+        ProceduralKind::Recommit
+    } else {
+        ProceduralKind::Other
     }
 }
 

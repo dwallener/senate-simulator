@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::model::legislative_context::Chamber;
+use crate::model::{identity::Party, legislative::PolicyDomain};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RawRosterRecord {
@@ -45,6 +46,27 @@ pub struct RawActionRecord {
     pub action_text: String,
     pub action_type: Option<String>,
     pub chamber: Chamber,
+    pub as_of_date: NaiveDate,
+    pub source_name: String,
+    pub source_identifier: String,
+    pub source_url: Option<String>,
+    pub fetched_at: DateTime<Utc>,
+    pub raw_payload: Value,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RawVoteRecord {
+    pub source_vote_id: String,
+    pub vote_date: NaiveDate,
+    pub senator_id: String,
+    pub senator_name: String,
+    pub object_id: Option<String>,
+    pub vote_category: String,
+    pub vote_position: String,
+    pub party_at_time: Party,
+    pub policy_domain: Option<PolicyDomain>,
+    pub is_procedural: bool,
+    pub procedural_kind: Option<String>,
     pub as_of_date: NaiveDate,
     pub source_name: String,
     pub source_identifier: String,

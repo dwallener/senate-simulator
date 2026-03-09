@@ -5,9 +5,10 @@ use chrono::NaiveDate;
 use crate::{
     analyze_chamber, derive_stance,
     error::SenateSimError,
+    features::materialize::{senators_for_snapshot, SenatorProfileMode},
     ingest::{
         load_snapshot, run_daily_ingestion_with_roots, snapshot_to_contexts,
-        snapshot_to_legislative_objects, snapshot_to_senators,
+        snapshot_to_legislative_objects,
     },
     model::{
         backtest_result::BacktestResult,
@@ -40,7 +41,7 @@ pub fn run_backtest_with_roots(
         Err(_) => run_daily_ingestion_with_roots(snapshot_date, fixture_root, data_root)?,
     };
 
-    let senators = snapshot_to_senators(&snapshot)?;
+    let senators = senators_for_snapshot(&snapshot, data_root, SenatorProfileMode::HistoricalFeatures)?;
     let legislative_objects = snapshot_to_legislative_objects(&snapshot)?;
     let contexts = snapshot_to_contexts(&snapshot)?;
 

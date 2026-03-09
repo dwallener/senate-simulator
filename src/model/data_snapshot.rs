@@ -5,6 +5,7 @@ use crate::{
     error::SenateSimError,
     model::normalized_records::{
         NormalizedActionRecord, NormalizedLegislativeRecord, NormalizedSenatorRecord,
+        NormalizedVoteRecord,
     },
 };
 
@@ -26,6 +27,7 @@ pub struct DataSnapshot {
     pub roster_records: Vec<NormalizedSenatorRecord>,
     pub legislative_records: Vec<NormalizedLegislativeRecord>,
     pub action_records: Vec<NormalizedActionRecord>,
+    pub vote_records: Vec<NormalizedVoteRecord>,
     pub source_manifests: Vec<SourceManifest>,
 }
 
@@ -45,6 +47,9 @@ impl DataSnapshot {
             record.validate()?;
         }
         for record in &self.action_records {
+            record.validate()?;
+        }
+        for record in &self.vote_records {
             record.validate()?;
         }
 

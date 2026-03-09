@@ -335,7 +335,8 @@ mod tests {
         DataSnapshot {
             snapshot_date: NaiveDate::from_ymd_opt(2026, 3, 9).unwrap(),
             run_id: "snapshot-20260309".to_string(),
-            created_at: chrono::DateTime::from_timestamp(1_700_000_000, 0).unwrap().to_utc(),
+            created_at: chrono::DateTime::<chrono::Utc>::from_timestamp(1_700_000_000, 0)
+                .unwrap(),
             roster_records: vec![],
             legislative_records: vec![NormalizedLegislativeRecord {
                 object_id: "obj_1".to_string(),
@@ -354,9 +355,11 @@ mod tests {
                 as_of_date: NaiveDate::from_ymd_opt(2026, 3, 9).unwrap(),
             }],
             action_records: vec![],
+            vote_records: vec![],
             source_manifests: vec![SourceManifest {
                 source_name: "test".to_string(),
-                fetched_at: chrono::DateTime::from_timestamp(1_700_000_000, 0).unwrap().to_utc(),
+                fetched_at: chrono::DateTime::<chrono::Utc>::from_timestamp(1_700_000_000, 0)
+                    .unwrap(),
                 as_of_date: NaiveDate::from_ymd_opt(2026, 3, 9).unwrap(),
                 source_identifier: "test".to_string(),
                 content_hash: "abc".to_string(),

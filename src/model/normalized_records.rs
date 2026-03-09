@@ -67,6 +67,55 @@ pub struct NormalizedActionRecord {
     pub as_of_date: NaiveDate,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VotePosition {
+    Yea,
+    Nay,
+    Present,
+    NotVoting,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VoteCategory {
+    Passage,
+    Cloture,
+    MotionToProceed,
+    Amendment,
+    Nomination,
+    Procedural,
+    Other,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProceduralKind {
+    Cloture,
+    MotionToProceed,
+    AmendmentProcess,
+    Table,
+    Recommit,
+    Other,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NormalizedVoteRecord {
+    pub vote_id: String,
+    pub vote_date: NaiveDate,
+    pub senator_id: String,
+    pub senator_name: String,
+    pub object_id: Option<String>,
+    pub vote_category: VoteCategory,
+    pub vote_position: VotePosition,
+    pub party_at_time: Party,
+    pub policy_domain: Option<PolicyDomain>,
+    pub is_procedural: bool,
+    pub procedural_kind: Option<ProceduralKind>,
+    pub as_of_date: NaiveDate,
+}
+
 impl NormalizedSenatorRecord {
     pub fn validate(&self) -> Result<(), SenateSimError> {
         if self.senator_id.trim().is_empty() {
@@ -145,6 +194,24 @@ impl NormalizedActionRecord {
             });
         }
 
+        Ok(())
+    }
+}
+
+impl NormalizedVoteRecord {
+    pub fn validate(&self) -> Result<(), SenateSimError> {
+        if self.vote_id.trim().is_empty() {
+            return Err(SenateSimError::Validation {
+                field: "normalized_vote_record.vote_id",
+                message: "must not be empty".to_string(),
+            });
+        }
+        if self.senator_id.trim().is_empty() || self.senator_name.trim().is_empty() {
+            return Err(SenateSimError::Validation {
+                field: "normalized_vote_record.senator_id",
+                message: "senator_id and senator_name must not be empty".to_string(),
+            });
+        }
         Ok(())
     }
 }

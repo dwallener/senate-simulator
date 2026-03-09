@@ -14,6 +14,7 @@ pub mod next_event_prediction;
 pub mod normalized_records;
 pub mod procedural;
 pub mod raw_records;
+pub mod senator_feature_record;
 pub mod scenario;
 pub mod senate_analysis;
 pub mod senate_event;

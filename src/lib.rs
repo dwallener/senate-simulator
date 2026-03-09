@@ -3,6 +3,7 @@ pub mod backtest;
 pub mod derive;
 pub mod error;
 pub mod eval;
+pub mod features;
 pub mod ingest;
 pub mod io;
 pub mod model;
@@ -22,9 +23,18 @@ pub use eval::examples::{
     persist_evaluation_artifacts,
 };
 pub use eval::runner::{evaluate_from_snapshot_date, evaluate_snapshot_examples};
+pub use features::materialize::{
+    build_and_persist_features, feature_record_to_senator, senators_for_snapshot,
+    snapshot_with_features_to_senators, SenatorProfileMode,
+};
+pub use features::senator::{
+    build_feature_report, build_senator_features_for_snapshot, load_feature_records,
+    load_feature_report, persist_feature_artifacts,
+};
+pub use features::windows::FeatureWindowConfig;
 pub use eval::timeline::build_historical_timelines;
 pub use ingest::{
-    run_daily_ingestion, run_daily_ingestion_with_roots, snapshot_to_contexts,
+    load_snapshot, run_daily_ingestion, run_daily_ingestion_with_roots, snapshot_to_contexts,
     snapshot_to_legislative_objects, snapshot_to_senators,
 };
 pub use model::action_alignment::AlignmentReport;
@@ -45,9 +55,10 @@ pub use model::legislative_context::{
 pub use model::next_event_prediction::{EventScore, NextEventPrediction};
 pub use model::normalized_records::{
     NormalizedActionCategory, NormalizedActionRecord, NormalizedLegislativeRecord,
-    NormalizedSenatorRecord,
+    NormalizedSenatorRecord, NormalizedVoteRecord, ProceduralKind, VoteCategory, VotePosition,
 };
-pub use model::raw_records::{RawActionRecord, RawLegislativeRecord, RawRosterRecord};
+pub use model::raw_records::{RawActionRecord, RawLegislativeRecord, RawRosterRecord, RawVoteRecord};
+pub use model::senator_feature_record::{FeatureReport, SenatorFeatureRecord};
 pub use model::scenario::SenatorScenario;
 pub use model::senate_analysis::{PivotSummary, SenateAnalysis, SenatorSignalSummary};
 pub use model::senate_event::SenateEvent;
