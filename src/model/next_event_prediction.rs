@@ -10,6 +10,7 @@ pub struct NextEventPrediction {
     pub object_id: String,
     pub current_stage: ProceduralStage,
     pub predicted_event: SenateEvent,
+    pub predicted_event_score: f32,
     pub confidence: f32,
     pub alternative_events: Vec<EventScore>,
     pub top_reasons: Vec<String>,
@@ -29,6 +30,10 @@ impl NextEventPrediction {
         }
 
         validate_probability("next_event_prediction.confidence", self.confidence)?;
+        validate_probability(
+            "next_event_prediction.predicted_event_score",
+            self.predicted_event_score,
+        )?;
         validate_probability(
             "next_event_prediction.coalition_stability",
             self.coalition_stability,

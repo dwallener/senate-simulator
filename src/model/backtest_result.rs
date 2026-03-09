@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::SenateSimError,
-    model::{normalized_records::NormalizedActionCategory, senate_event::SenateEvent},
+    model::senate_event::SenateEvent,
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -11,7 +11,7 @@ pub struct BacktestResult {
     pub snapshot_date: NaiveDate,
     pub object_id: String,
     pub predicted_next_event: Option<SenateEvent>,
-    pub actual_next_event: Option<NormalizedActionCategory>,
+    pub actual_next_event: Option<SenateEvent>,
     pub match_top_1: bool,
     pub match_top_k: bool,
     pub prediction_confidence: Option<f32>,

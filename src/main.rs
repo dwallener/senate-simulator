@@ -1,10 +1,13 @@
 use senate_simulator::{
-    AlignmentReport, BacktestResult, DataSnapshot, EvaluationSummary,
+    AlignmentReport, BacktestResult, DataSnapshot, EvaluationSummary, FloorActionAssessment,
+    NextEventPrediction, SenateAnalysis, SimulationState, TerminationReason,
     FeatureReport, FeatureWindowConfig, SenatorFeatureRecord, build_and_persist_features,
-    IngestionConfig, IngestionSourceMode, StanceDerivationMode, build_evaluation_artifacts_for_snapshot_date, derive_stance_with_mode,
+    IngestionConfig, IngestionSourceMode, SenatorProfileMode, StanceDerivationMode, analyze_chamber,
+    assess_floor_action, build_evaluation_artifacts_for_snapshot_date, derive_stance_with_mode,
     evaluate_from_snapshot_date_with_mode, load_feature_records, load_snapshot,
-    run_backtest_with_mode, run_daily_ingestion, run_ingestion, snapshot_to_contexts,
-    snapshot_to_legislative_objects, snapshot_with_features_to_senators,
+    predict_next_event, rollout_with_mode, run_backtest_with_mode, run_daily_ingestion,
+    run_ingestion, senators_for_snapshot, snapshot_to_contexts, snapshot_to_legislative_objects,
+    snapshot_with_features_to_senators,
 };
 
 fn main() {
@@ -16,6 +19,7 @@ fn main() {
         Some("eval-run") => run_eval_run_command(&args[1..]),
         Some("features-build") => run_features_build_command(&args[1..]),
         Some("features-inspect") => run_features_inspect_command(&args[1..]),
+        Some("predict-bill") => run_predict_bill_command(&args[1..]),
         Some("signals-inspect") => run_signals_inspect_command(&args[1..]),
         Some("stance-inspect") => run_stance_inspect_command(&args[1..]),
         _ => run_default_demo(),
@@ -231,6 +235,66 @@ fn run_signals_inspect_command(args: &[String]) -> Result<(), senate_simulator::
     Ok(())
 }
 
+fn run_predict_bill_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let object_id = parse_date_arg(args, "--object-id").unwrap_or("s_2100");
+    let mode = parse_stance_mode(parse_date_arg(args, "--stance-mode").unwrap_or("feature"))?;
+    let steps = parse_date_arg(args, "--steps")
+        .and_then(|value| value.parse::<usize>().ok())
+        .unwrap_or(3);
+    let snapshot_date = parse_date(date)?;
+    let snapshot = load_or_refresh_snapshot(snapshot_date)?;
+    let senators = senators_for_snapshot(
+        &snapshot,
+        std::path::Path::new("data"),
+        SenatorProfileMode::HistoricalFeatures,
+    )?;
+    let objects = snapshot_to_legislative_objects(&snapshot)?;
+    let contexts = snapshot_to_contexts(&snapshot)?;
+    let index = objects
+        .iter()
+        .position(|object| object.object_id == object_id)
+        .ok_or_else(|| senate_simulator::SenateSimError::Validation {
+            field: "cli.object_id",
+            message: format!("object_id {object_id} not found"),
+        })?;
+
+    let legislative_object = &objects[index];
+    let context = &contexts[index];
+    let stances = senators
+        .iter()
+        .map(|senator| derive_stance_with_mode(senator, legislative_object, context, mode))
+        .collect::<Result<Vec<_>, _>>()?;
+    let analysis = analyze_chamber(legislative_object, context, &stances)?;
+    let floor_action = assess_floor_action(legislative_object, context, &analysis)?;
+    let next_event = predict_next_event(legislative_object, context, &analysis)?;
+    let trajectory = rollout_with_mode(
+        &SimulationState {
+            legislative_object: legislative_object.clone(),
+            context: context.clone(),
+            roster: senators,
+            step_index: 0,
+            last_event: None,
+            consecutive_no_movement: 0,
+            days_elapsed: 0,
+            cloture_attempts: 0,
+        },
+        steps,
+        mode,
+    )?;
+
+    print_bill_prediction_summary(
+        legislative_object.object_id.as_str(),
+        snapshot_date,
+        &analysis,
+        &floor_action,
+        &next_event,
+        &trajectory.terminated_reason,
+        &trajectory.steps,
+    );
+    Ok(())
+}
+
 fn parse_date(value: &str) -> Result<chrono::NaiveDate, senate_simulator::SenateSimError> {
     chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d").map_err(|_| {
         senate_simulator::SenateSimError::Validation {
@@ -438,6 +502,81 @@ fn print_public_signal_record(record: &senate_simulator::NormalizedPublicSignalR
     if !record.top_organizations.is_empty() {
         println!("  sources={}", record.top_organizations.join(", "));
     }
+}
+
+fn print_bill_prediction_summary(
+    object_id: &str,
+    snapshot_date: chrono::NaiveDate,
+    analysis: &SenateAnalysis,
+    floor_action: &FloorActionAssessment,
+    next_event: &NextEventPrediction,
+    terminated_reason: &TerminationReason,
+    steps: &[senate_simulator::SimulationStep],
+) {
+    println!(
+        "Prediction {} {}: support={} lean_support={} undecided={} oppose={}",
+        snapshot_date,
+        object_id,
+        analysis.likely_support_count,
+        analysis.lean_support_count,
+        analysis.undecided_count,
+        analysis.likely_oppose_count + analysis.lean_oppose_count
+    );
+    println!(
+        "  majority_viable={} cloture_viable={} stability={:.2} filibuster_risk={:.2}",
+        analysis.simple_majority_viable,
+        analysis.cloture_viable,
+        analysis.coalition_stability,
+        analysis.filibuster_risk
+    );
+    println!(
+        "  floor_action={} ({:.2}) support_margin={} cloture_gap={}",
+        floor_action.predicted_action,
+        floor_action.confidence,
+        floor_action.support_margin_estimate,
+        floor_action.cloture_gap_estimate
+    );
+    println!(
+        "  next_event={:?} score={:.2} confidence={:.2} stage={:?}",
+        next_event.predicted_event,
+        next_event.predicted_event_score,
+        next_event.confidence,
+        next_event.current_stage
+    );
+    for alternative in next_event.alternative_events.iter().take(3) {
+        println!("  alt {:?} {:.2}: {}", alternative.event, alternative.score, alternative.reason);
+    }
+    for reason in next_event.top_reasons.iter().take(4) {
+        println!("  - {reason}");
+    }
+    if !analysis.pivotal_senators.is_empty() {
+        let pivots = analysis
+            .pivotal_senators
+            .iter()
+            .take(5)
+            .map(|pivot| pivot.senator_id.as_str())
+            .collect::<Vec<_>>();
+        println!("  pivots={}", pivots.join(", "));
+    }
+    if !analysis.likely_blockers.is_empty() {
+        let blockers = analysis
+            .likely_blockers
+            .iter()
+            .take(5)
+            .map(|blocker| blocker.senator_id.as_str())
+            .collect::<Vec<_>>();
+        println!("  blockers={}", blockers.join(", "));
+    }
+    for step in steps.iter().take(steps.len().min(3)) {
+        println!(
+            "  rollout step {}: {:?} -> {:?} ({:.2})",
+            step.step_index + 1,
+            step.starting_stage,
+            step.predicted_event,
+            step.confidence
+        );
+    }
+    println!("  terminated={:?}", terminated_reason);
 }
 
 #[cfg(test)]

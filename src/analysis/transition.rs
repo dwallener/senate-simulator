@@ -46,6 +46,7 @@ pub fn predict_next_event(
         object_id: legislative_object.object_id.clone(),
         current_stage: context.procedural_stage.clone(),
         predicted_event,
+        predicted_event_score: top_score,
         confidence,
         alternative_events,
         top_reasons,
@@ -772,6 +773,7 @@ mod tests {
             object_id: "obj_001".to_string(),
             current_stage: ProceduralStage::Debate,
             predicted_event: SenateEvent::NegotiationIntensifies,
+            predicted_event_score: 0.61,
             confidence: 0.61,
             alternative_events: vec![
                 EventScore {

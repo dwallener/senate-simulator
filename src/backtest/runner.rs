@@ -78,27 +78,29 @@ pub fn run_backtest_with_roots(
     let prediction = predict_next_event(legislative_object, context, &analysis)?;
 
     let actual_action = find_actual_next_action(data_root, fixture_root, snapshot_date, object_id)?;
-    let predicted_category = map_event_to_category(&prediction.predicted_event);
-    let alternative_categories = prediction
+    let actual_event = actual_action
+        .as_ref()
+        .map(|record| map_category_to_event(&record.category))
+        .or(Some(SenateEvent::NoMeaningfulMovement));
+    let alternative_events = prediction
         .alternative_events
         .iter()
-        .map(|event| map_event_to_category(&event.event))
+        .map(|event| event.event.clone())
         .collect::<Vec<_>>();
 
     let result = BacktestResult {
         snapshot_date,
         object_id: object_id.to_string(),
         predicted_next_event: Some(prediction.predicted_event.clone()),
-        actual_next_event: actual_action.as_ref().map(|record| record.category),
-        match_top_1: actual_action
+        actual_next_event: actual_event.clone(),
+        match_top_1: actual_event
             .as_ref()
-            .map(|record| record.category == predicted_category)
+            .map(|event| *event == prediction.predicted_event)
             .unwrap_or(false),
-        match_top_k: actual_action
+        match_top_k: actual_event
             .as_ref()
-            .map(|record| {
-                record.category == predicted_category
-                    || alternative_categories.contains(&record.category)
+            .map(|event| {
+                *event == prediction.predicted_event || alternative_events.contains(event)
             })
             .unwrap_or(false),
         prediction_confidence: Some(prediction.confidence),
@@ -167,25 +169,18 @@ fn available_snapshot_dates(
     Ok(dates)
 }
 
-fn map_event_to_category(event: &SenateEvent) -> NormalizedActionCategory {
-    match event {
-        SenateEvent::MotionToProceedAttempted => NormalizedActionCategory::MotionToProceed,
-        SenateEvent::DebateBegins => NormalizedActionCategory::Debate,
-        SenateEvent::AmendmentFightBegins => NormalizedActionCategory::Amendment,
-        SenateEvent::ClotureFiled
-        | SenateEvent::ClotureVoteScheduled
-        | SenateEvent::ClotureInvoked
-        | SenateEvent::ClotureFails => NormalizedActionCategory::Cloture,
-        SenateEvent::FinalPassageScheduled
-        | SenateEvent::FinalPassageSucceeds
-        | SenateEvent::FinalPassageFails => NormalizedActionCategory::Passage,
-        SenateEvent::NoMeaningfulMovement | SenateEvent::ProceduralBlock => {
-            NormalizedActionCategory::Stall
-        }
-        SenateEvent::LeadershipSignalsAction
-        | SenateEvent::NegotiationIntensifies
-        | SenateEvent::ReturnedToCalendar
-        | SenateEvent::Other(_) => NormalizedActionCategory::Other,
+fn map_category_to_event(category: &NormalizedActionCategory) -> SenateEvent {
+    match category {
+        NormalizedActionCategory::MotionToProceed => SenateEvent::MotionToProceedAttempted,
+        NormalizedActionCategory::Debate => SenateEvent::DebateBegins,
+        NormalizedActionCategory::Amendment => SenateEvent::AmendmentFightBegins,
+        NormalizedActionCategory::Cloture => SenateEvent::ClotureVoteScheduled,
+        NormalizedActionCategory::Passage => SenateEvent::FinalPassageSucceeds,
+        NormalizedActionCategory::Stall => SenateEvent::NoMeaningfulMovement,
+        NormalizedActionCategory::Introduced
+        | NormalizedActionCategory::Referred
+        | NormalizedActionCategory::Reported
+        | NormalizedActionCategory::Other => SenateEvent::LeadershipSignalsAction,
     }
 }
 
@@ -200,7 +195,10 @@ fn build_notes(
             action.action_date, action.category
         ));
     } else {
-        notes.push("no subsequent action found in later dated snapshots".to_string());
+        notes.push(
+            "no subsequent action found in later dated snapshots; treated as NoMeaningfulMovement"
+                .to_string(),
+        );
     }
     notes
 }
