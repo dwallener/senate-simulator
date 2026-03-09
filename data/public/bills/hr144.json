@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "snapshot_date": "2026-03-09",
-  "generated_at": "2026-03-09T21:43:06.582302+00:00",
+  "generated_at": "2026-03-09T21:55:02.344218+00:00",
   "object_id": "hr144",
   "label": "Tennessee Valley Authority Salary Transparency Act",
   "title": "Tennessee Valley Authority Salary Transparency Act",
@@ -43,85 +43,115 @@
   "pivots": [
     {
       "senator_id": "real_t000250",
+      "senator_name": "Thune, John",
+      "state": "SD",
+      "party": "Republican",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
       "stance_label": "LeanSupport",
       "procedural_posture": "Unclear",
       "substantive_support": 0.61175066,
       "procedural_support": 0.64786345,
-      "negotiability": 0.14874214,
-      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+      "negotiability": 0.14874214
     },
     {
       "senator_id": "real_t000278",
+      "senator_name": "Tuberville, Tommy",
+      "state": "AL",
+      "party": "Republican",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
       "stance_label": "LeanSupport",
       "procedural_posture": "Unclear",
       "substantive_support": 0.6146368,
       "procedural_support": 0.6765105,
-      "negotiability": 0.10936149,
-      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+      "negotiability": 0.10936149
     },
     {
       "senator_id": "real_l000577",
+      "senator_name": "Lee, Mike",
+      "state": "UT",
+      "party": "Republican",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
       "stance_label": "LeanSupport",
       "procedural_posture": "Unclear",
       "substantive_support": 0.6153359,
       "procedural_support": 0.68134147,
-      "negotiability": 0.108744495,
-      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+      "negotiability": 0.108744495
     },
     {
       "senator_id": "real_p000603",
+      "senator_name": "Paul, Rand",
+      "state": "KY",
+      "party": "Republican",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
       "stance_label": "LeanSupport",
       "procedural_posture": "Unclear",
       "substantive_support": 0.602201,
       "procedural_support": 0.7121123,
-      "negotiability": 0.1466147,
-      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+      "negotiability": 0.1466147
     },
     {
       "senator_id": "real_j000293",
+      "senator_name": "Johnson, Ron",
+      "state": "WI",
+      "party": "Republican",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
       "stance_label": "LeanSupport",
       "procedural_posture": "Unclear",
       "substantive_support": 0.6153359,
       "procedural_support": 0.6846748,
-      "negotiability": 0.108744495,
-      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+      "negotiability": 0.108744495
     }
   ],
   "blockers": [
     {
       "senator_id": "real_b001267",
-      "public_position": "undeclared",
+      "senator_name": "Bennet, Michael F.",
+      "state": "CO",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406,
-      "reason": "low procedural support and high rigidity mark a likely blocker"
+      "rigidity": 0.8597406
     },
     {
       "senator_id": "real_b001288",
-      "public_position": "undeclared",
+      "senator_name": "Booker, Cory A.",
+      "state": "NJ",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406,
-      "reason": "low procedural support and high rigidity mark a likely blocker"
+      "rigidity": 0.8597406
     },
     {
       "senator_id": "real_c001088",
-      "public_position": "undeclared",
+      "senator_name": "Coons, Christopher A.",
+      "state": "DE",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406,
-      "reason": "low procedural support and high rigidity mark a likely blocker"
+      "rigidity": 0.8597406
     },
     {
       "senator_id": "real_w000790",
-      "public_position": "undeclared",
+      "senator_name": "Warnock, Raphael G.",
+      "state": "GA",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406,
-      "reason": "low procedural support and high rigidity mark a likely blocker"
+      "rigidity": 0.8597406
     },
     {
       "senator_id": "real_v000128",
-      "public_position": "mixed",
+      "senator_name": "Van Hollen, Chris",
+      "state": "MD",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Mixed",
       "defection_probability": 0.0,
-      "rigidity": 0.8208933,
-      "reason": "low procedural support and high rigidity mark a likely blocker"
+      "rigidity": 0.8208933
     }
   ],
   "defectors": [],

@@ -96,12 +96,26 @@ def render_bill_detail(detail: dict[str, Any]) -> None:
     if detail.get("pivots"):
         st.subheader("Pivots")
         for pivot in detail["pivots"][:10]:
-            st.write(f"- {pivot['senator_id']}: {pivot['reason']}")
+            st.write(
+                f"- {pivot['senator_name']} ({pivot['state']}, {pivot['party']}): "
+                f"{pivot['reason']}"
+            )
 
     if detail.get("blockers"):
         st.subheader("Blockers")
         for blocker in detail["blockers"][:10]:
-            st.write(f"- {blocker['senator_id']}: {blocker['reason']}")
+            st.write(
+                f"- {blocker['senator_name']} ({blocker['state']}, {blocker['party']}): "
+                f"{blocker['reason']}"
+            )
+
+    if detail.get("defectors"):
+        st.subheader("Likely Defectors")
+        for defector in detail["defectors"][:10]:
+            st.write(
+                f"- {defector['senator_name']} ({defector['state']}, {defector['party']}): "
+                f"{defector['reason']}"
+            )
 
     if detail.get("rollout_steps"):
         st.subheader("Rollout")

@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{collections::HashMap, fs, path::Path};
 
 use chrono::{NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
@@ -113,9 +113,9 @@ pub struct PublicBillDetail {
     pub next_event_score: f32,
     pub next_event_confidence: f32,
     pub alternatives: Vec<PublicAlternativeEvent>,
-    pub pivots: Vec<PivotSummary>,
-    pub blockers: Vec<SenatorSignalSummary>,
-    pub defectors: Vec<SenatorSignalSummary>,
+    pub pivots: Vec<PublicPivot>,
+    pub blockers: Vec<PublicSignalActor>,
+    pub defectors: Vec<PublicSignalActor>,
     pub rollout_steps: Vec<PublicRolloutStep>,
     pub top_findings: Vec<String>,
     pub top_reasons: Vec<String>,
@@ -141,6 +141,39 @@ pub struct PublicRolloutStep {
     pub oppose_count: usize,
     pub simple_majority_viable: bool,
     pub cloture_viable: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PublicPivot {
+    pub senator_id: String,
+    pub senator_name: String,
+    pub state: String,
+    pub party: String,
+    pub reason: String,
+    pub stance_label: String,
+    pub procedural_posture: String,
+    pub substantive_support: f32,
+    pub procedural_support: f32,
+    pub negotiability: f32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PublicSignalActor {
+    pub senator_id: String,
+    pub senator_name: String,
+    pub state: String,
+    pub party: String,
+    pub reason: String,
+    pub public_position: String,
+    pub defection_probability: f32,
+    pub rigidity: f32,
+}
+
+#[derive(Debug, Clone)]
+struct SenatorDisplayInfo {
+    name: String,
+    state: String,
+    party: String,
 }
 
 #[derive(Debug, Clone)]
@@ -188,6 +221,19 @@ pub fn export_public_artifacts_with_roots(
     let objects = snapshot_to_legislative_objects(&snapshot)?;
     let contexts = snapshot_to_contexts(&snapshot)?;
     let generated_at = Utc::now().to_rfc3339();
+    let senator_lookup = senators
+        .iter()
+        .map(|senator| {
+            (
+                senator.identity.senator_id.clone(),
+                SenatorDisplayInfo {
+                    name: senator.identity.full_name.clone(),
+                    state: senator.identity.state.clone(),
+                    party: senator.identity.party.to_string(),
+                },
+            )
+        })
+        .collect::<HashMap<_, _>>();
 
     let mut rows = Vec::new();
     let mut details = Vec::new();
@@ -254,6 +300,7 @@ pub fn export_public_artifacts_with_roots(
             context,
             &trajectory.terminated_reason,
             &trajectory.steps,
+            &senator_lookup,
             snapshot_date,
             generated_at.as_str(),
         ));
@@ -366,6 +413,7 @@ fn build_bill_detail(
     context: &LegislativeContext,
     terminated_reason: &TerminationReason,
     steps: &[SimulationStep],
+    senator_lookup: &HashMap<String, SenatorDisplayInfo>,
     snapshot_date: NaiveDate,
     generated_at: &str,
 ) -> PublicBillDetail {
@@ -399,9 +447,21 @@ fn build_bill_detail(
             .iter()
             .map(public_alternative)
             .collect(),
-        pivots: analysis.pivotal_senators.clone(),
-        blockers: analysis.likely_blockers.clone(),
-        defectors: analysis.likely_defectors.clone(),
+        pivots: analysis
+            .pivotal_senators
+            .iter()
+            .map(|pivot| public_pivot(pivot, senator_lookup))
+            .collect(),
+        blockers: analysis
+            .likely_blockers
+            .iter()
+            .map(|blocker| public_signal_actor(blocker, senator_lookup))
+            .collect(),
+        defectors: analysis
+            .likely_defectors
+            .iter()
+            .map(|defector| public_signal_actor(defector, senator_lookup))
+            .collect(),
         rollout_steps: steps.iter().map(public_rollout_step).collect(),
         top_findings: analysis.top_findings.clone(),
         top_reasons: merged_reasons(analysis, floor_action, next_event),
@@ -429,6 +489,54 @@ fn public_rollout_step(step: &SimulationStep) -> PublicRolloutStep {
         oppose_count: step.analysis_summary.likely_oppose_count,
         simple_majority_viable: step.analysis_summary.simple_majority_viable,
         cloture_viable: step.analysis_summary.cloture_viable,
+    }
+}
+
+fn public_pivot(
+    pivot: &PivotSummary,
+    senator_lookup: &HashMap<String, SenatorDisplayInfo>,
+) -> PublicPivot {
+    let display = senator_lookup.get(&pivot.senator_id);
+    PublicPivot {
+        senator_id: pivot.senator_id.clone(),
+        senator_name: display
+            .map(|value| value.name.clone())
+            .unwrap_or_else(|| pivot.senator_id.clone()),
+        state: display
+            .map(|value| value.state.clone())
+            .unwrap_or_else(|| "--".to_string()),
+        party: display
+            .map(|value| value.party.clone())
+            .unwrap_or_else(|| "Unknown".to_string()),
+        reason: pivot.reason.clone(),
+        stance_label: format!("{:?}", pivot.stance_label),
+        procedural_posture: format!("{:?}", pivot.procedural_posture),
+        substantive_support: pivot.substantive_support,
+        procedural_support: pivot.procedural_support,
+        negotiability: pivot.negotiability,
+    }
+}
+
+fn public_signal_actor(
+    actor: &SenatorSignalSummary,
+    senator_lookup: &HashMap<String, SenatorDisplayInfo>,
+) -> PublicSignalActor {
+    let display = senator_lookup.get(&actor.senator_id);
+    PublicSignalActor {
+        senator_id: actor.senator_id.clone(),
+        senator_name: display
+            .map(|value| value.name.clone())
+            .unwrap_or_else(|| actor.senator_id.clone()),
+        state: display
+            .map(|value| value.state.clone())
+            .unwrap_or_else(|| "--".to_string()),
+        party: display
+            .map(|value| value.party.clone())
+            .unwrap_or_else(|| "Unknown".to_string()),
+        reason: actor.reason.clone(),
+        public_position: format!("{:?}", actor.public_position),
+        defection_probability: actor.defection_probability,
+        rigidity: actor.rigidity,
     }
 }
 
