@@ -23,4 +23,5 @@ pub mod senator_stance;
 pub mod simulation_state;
 pub mod simulation_step;
 pub mod structural;
+pub mod stance_score_breakdown;
 pub mod trajectory_result;

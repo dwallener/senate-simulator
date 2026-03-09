@@ -2,7 +2,10 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{error::SenateSimError, model::dynamic_state::PublicPosition};
+use crate::{
+    error::SenateSimError,
+    model::{dynamic_state::PublicPosition, stance_score_breakdown::StanceScoreBreakdown},
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SenatorStance {
@@ -20,6 +23,8 @@ pub struct SenatorStance {
     pub procedural_posture: ProceduralPosture,
     pub public_position: PublicPosition,
     pub top_factors: Vec<String>,
+    #[serde(default)]
+    pub score_breakdown: Option<StanceScoreBreakdown>,
 }
 
 impl SenatorStance {
@@ -50,6 +55,9 @@ impl SenatorStance {
 
         for factor in &self.top_factors {
             validate_required_string("senator_stance.top_factors", factor)?;
+        }
+        if let Some(score_breakdown) = &self.score_breakdown {
+            score_breakdown.validate()?;
         }
 
         Ok(())
@@ -150,6 +158,7 @@ mod tests {
                 "leadership support is high".to_string(),
                 "substantive concerns remain negotiable".to_string(),
             ],
+            score_breakdown: None,
         }
     }
 

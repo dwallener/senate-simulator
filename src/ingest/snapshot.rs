@@ -233,6 +233,8 @@ fn materialize_senator(
                 0.80,
             ),
         },
+        feature_coverage_score: None,
+        feature_notes: vec![],
     };
     senator.validate()?;
     Ok(senator)

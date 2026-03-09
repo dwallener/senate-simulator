@@ -14,6 +14,10 @@ pub struct Senator {
     pub issue_preferences: IssuePreferences,
     pub procedural: Procedural,
     pub dynamic_state: DynamicState,
+    #[serde(default)]
+    pub feature_coverage_score: Option<f32>,
+    #[serde(default)]
+    pub feature_notes: Vec<String>,
 }
 
 impl Senator {
@@ -122,6 +126,12 @@ impl Senator {
             "dynamic_state.current_issue_salience_in_state",
             self.dynamic_state.current_issue_salience_in_state,
         )?;
+        if let Some(coverage_score) = self.feature_coverage_score {
+            validate_probability("senator.feature_coverage_score", coverage_score)?;
+        }
+        for note in &self.feature_notes {
+            validate_required_string("senator.feature_notes", note)?;
+        }
 
         Ok(())
     }
@@ -269,6 +279,8 @@ mod tests {
                 current_party_pressure: 0.4,
                 current_issue_salience_in_state: 0.67,
             },
+            feature_coverage_score: None,
+            feature_notes: vec![],
         }
     }
 

@@ -81,6 +81,8 @@ pub fn feature_record_to_senator(
             current_party_pressure: record.recent_party_loyalty,
             current_issue_salience_in_state: 0.5,
         },
+        feature_coverage_score: Some(record.coverage_score),
+        feature_notes: record.notes.clone(),
     };
     senator.validate()?;
     Ok(senator)

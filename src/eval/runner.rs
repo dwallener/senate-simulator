@@ -3,7 +3,8 @@ use std::path::Path;
 use chrono::NaiveDate;
 
 use crate::{
-    analyze_chamber, derive_stance,
+    analyze_chamber, derive_stance_with_mode,
+    derive::StanceDerivationMode,
     error::SenateSimError,
     eval::{
         examples::{
@@ -25,16 +26,24 @@ use crate::{
         data_snapshot::DataSnapshot,
         evaluation_example::{EvaluationExample, EvaluationSummary},
     },
-    predict_next_event, rollout, SimulationState,
+    predict_next_event, SimulationState,
 };
 
 pub fn evaluate_from_snapshot_date(
     snapshot_date: NaiveDate,
 ) -> Result<EvaluationSummary, SenateSimError> {
+    evaluate_from_snapshot_date_with_mode(snapshot_date, StanceDerivationMode::FeatureDriven)
+}
+
+pub fn evaluate_from_snapshot_date_with_mode(
+    snapshot_date: NaiveDate,
+    mode: StanceDerivationMode,
+) -> Result<EvaluationSummary, SenateSimError> {
     evaluate_from_snapshot_date_with_roots(
         snapshot_date,
         Path::new("data"),
         Path::new("fixtures/ingest"),
+        mode,
     )
 }
 
@@ -42,6 +51,7 @@ pub fn evaluate_from_snapshot_date_with_roots(
     snapshot_date: NaiveDate,
     data_root: &Path,
     fixture_root: &Path,
+    mode: StanceDerivationMode,
 ) -> Result<EvaluationSummary, SenateSimError> {
     let snapshot = match load_snapshot(data_root, snapshot_date) {
         Ok(snapshot) => snapshot,
@@ -60,12 +70,13 @@ pub fn evaluate_from_snapshot_date_with_roots(
         }
     };
 
-    evaluate_snapshot_examples(&snapshot, &artifacts.examples)
+    evaluate_snapshot_examples(&snapshot, &artifacts.examples, mode)
 }
 
 pub fn evaluate_snapshot_examples(
     snapshot: &DataSnapshot,
     examples: &[EvaluationExample],
+    mode: StanceDerivationMode,
 ) -> Result<EvaluationSummary, SenateSimError> {
     let features =
         build_senator_features_for_snapshot(snapshot, &snapshot.vote_records, &FeatureWindowConfig::default())?;
@@ -98,7 +109,7 @@ pub fn evaluate_snapshot_examples(
         let context = &contexts[index];
         let stances = senators
             .iter()
-            .map(|senator| derive_stance(senator, legislative_object, context))
+            .map(|senator| derive_stance_with_mode(senator, legislative_object, context, mode))
             .collect::<Result<Vec<_>, _>>()?;
         let analysis = analyze_chamber(legislative_object, context, &stances)?;
         let prediction = predict_next_event(legislative_object, context, &analysis)?;
@@ -115,7 +126,7 @@ pub fn evaluate_snapshot_examples(
             top_k_hits += 1;
         }
 
-        let rollout_result = rollout(
+        let rollout_result = crate::rollout_with_mode(
             &SimulationState {
                 legislative_object: legislative_object.clone(),
                 context: context.clone(),
@@ -127,6 +138,7 @@ pub fn evaluate_snapshot_examples(
                 cloture_attempts: 0,
             },
             3,
+            mode,
         )?;
         if rollout_result
             .steps
@@ -166,6 +178,8 @@ mod tests {
         normalized_records::{NormalizedLegislativeRecord, NormalizedSenatorRecord},
         senate_event::SenateEvent,
     };
+
+    use crate::derive::StanceDerivationMode;
 
     use super::evaluate_snapshot_examples;
 
@@ -241,7 +255,9 @@ mod tests {
             notes: vec![],
         }];
 
-        let summary: EvaluationSummary = evaluate_snapshot_examples(&snapshot(), &examples).unwrap();
+        let summary: EvaluationSummary =
+            evaluate_snapshot_examples(&snapshot(), &examples, StanceDerivationMode::FeatureDriven)
+                .unwrap();
         assert_eq!(summary.total_examples, 1);
         assert!((0.0..=1.0).contains(&summary.top_1_next_event_accuracy));
         assert!((0.0..=1.0).contains(&summary.top_k_next_event_accuracy));

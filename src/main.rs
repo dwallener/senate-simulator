@@ -1,8 +1,10 @@
 use senate_simulator::{
     AlignmentReport, BacktestResult, DataSnapshot, EvaluationSummary,
     FeatureReport, FeatureWindowConfig, SenatorFeatureRecord, build_and_persist_features,
-    build_evaluation_artifacts_for_snapshot_date, evaluate_from_snapshot_date, load_feature_records,
-    load_snapshot, run_backtest, run_daily_ingestion,
+    StanceDerivationMode, build_evaluation_artifacts_for_snapshot_date, derive_stance_with_mode,
+    evaluate_from_snapshot_date_with_mode, load_feature_records, load_snapshot,
+    run_backtest_with_mode, run_daily_ingestion, snapshot_to_contexts,
+    snapshot_to_legislative_objects, snapshot_with_features_to_senators,
 };
 
 fn main() {
@@ -14,6 +16,7 @@ fn main() {
         Some("eval-run") => run_eval_run_command(&args[1..]),
         Some("features-build") => run_features_build_command(&args[1..]),
         Some("features-inspect") => run_features_inspect_command(&args[1..]),
+        Some("stance-inspect") => run_stance_inspect_command(&args[1..]),
         _ => run_default_demo(),
     };
 
@@ -34,8 +37,9 @@ fn run_ingest_command(args: &[String]) -> Result<(), senate_simulator::SenateSim
 fn run_backtest_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
     let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
     let object_id = parse_date_arg(args, "--object-id").unwrap_or("s_2100");
+    let mode = parse_stance_mode(parse_date_arg(args, "--stance-mode").unwrap_or("feature"))?;
     let snapshot_date = parse_date(date)?;
-    let result = run_backtest(snapshot_date, object_id)?;
+    let result = run_backtest_with_mode(snapshot_date, object_id, mode)?;
     print_backtest_summary(&result);
     Ok(())
 }
@@ -45,7 +49,7 @@ fn run_default_demo() -> Result<(), senate_simulator::SenateSimError> {
     let snapshot = run_daily_ingestion(run_date)?;
     print_snapshot_summary(&snapshot);
 
-    let result = run_backtest(run_date, "s_2100")?;
+    let result = run_backtest_with_mode(run_date, "s_2100", StanceDerivationMode::FeatureDriven)?;
     print_backtest_summary(&result);
 
     let snapshot_loaded = load_or_refresh_snapshot(run_date)?;
@@ -59,7 +63,10 @@ fn run_default_demo() -> Result<(), senate_simulator::SenateSimError> {
     let artifacts = build_evaluation_artifacts_for_snapshot_date(run_date)?;
     print_alignment_summary(&artifacts.alignment_report);
 
-    let summary = evaluate_from_snapshot_date(run_date)?;
+    let summary = evaluate_from_snapshot_date_with_mode(
+        run_date,
+        StanceDerivationMode::FeatureDriven,
+    )?;
     print_evaluation_summary(&summary);
     Ok(())
 }
@@ -79,8 +86,9 @@ fn run_eval_build_command(args: &[String]) -> Result<(), senate_simulator::Senat
 
 fn run_eval_run_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
     let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let mode = parse_stance_mode(parse_date_arg(args, "--stance-mode").unwrap_or("feature"))?;
     let snapshot_date = parse_date(date)?;
-    let summary = evaluate_from_snapshot_date(snapshot_date)?;
+    let summary = evaluate_from_snapshot_date_with_mode(snapshot_date, mode)?;
     print_evaluation_summary(&summary);
     Ok(())
 }
@@ -125,6 +133,46 @@ fn run_features_inspect_command(args: &[String]) -> Result<(), senate_simulator:
     Ok(())
 }
 
+fn run_stance_inspect_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let senator_id = parse_date_arg(args, "--senator-id").unwrap_or("real_a0001");
+    let object_id = parse_date_arg(args, "--object-id").unwrap_or("s_2100");
+    let mode = parse_stance_mode(parse_date_arg(args, "--stance-mode").unwrap_or("feature"))?;
+    let snapshot_date = parse_date(date)?;
+    let snapshot = load_or_refresh_snapshot(snapshot_date)?;
+    let features = match load_feature_records(std::path::Path::new("data"), snapshot_date) {
+        Ok(records) => records,
+        Err(_) => {
+            let (records, _) = build_and_persist_features(
+                &snapshot,
+                std::path::Path::new("data"),
+                &FeatureWindowConfig::default(),
+            )?;
+            records
+        }
+    };
+    let senators = snapshot_with_features_to_senators(&snapshot, &features)?;
+    let objects = snapshot_to_legislative_objects(&snapshot)?;
+    let contexts = snapshot_to_contexts(&snapshot)?;
+    let senator = senators
+        .iter()
+        .find(|senator| senator.identity.senator_id == senator_id)
+        .ok_or_else(|| senate_simulator::SenateSimError::Validation {
+            field: "cli.senator_id",
+            message: format!("senator_id {senator_id} not found"),
+        })?;
+    let index = objects
+        .iter()
+        .position(|object| object.object_id == object_id)
+        .ok_or_else(|| senate_simulator::SenateSimError::Validation {
+            field: "cli.object_id",
+            message: format!("object_id {object_id} not found"),
+        })?;
+    let stance = derive_stance_with_mode(senator, &objects[index], &contexts[index], mode)?;
+    print_stance_details(&stance);
+    Ok(())
+}
+
 fn parse_date(value: &str) -> Result<chrono::NaiveDate, senate_simulator::SenateSimError> {
     chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d").map_err(|_| {
         senate_simulator::SenateSimError::Validation {
@@ -138,6 +186,21 @@ fn parse_date_arg<'a>(args: &'a [String], flag: &str) -> Option<&'a str> {
     args.windows(2)
         .find(|window| window[0] == flag)
         .map(|window| window[1].as_str())
+}
+
+fn parse_stance_mode(
+    value: &str,
+) -> Result<StanceDerivationMode, senate_simulator::SenateSimError> {
+    match value {
+        "heuristic" => Ok(StanceDerivationMode::Heuristic),
+        "feature" | "feature-driven" | "feature_driven" => {
+            Ok(StanceDerivationMode::FeatureDriven)
+        }
+        _ => Err(senate_simulator::SenateSimError::Validation {
+            field: "cli.stance_mode",
+            message: format!("invalid stance mode {value}, expected heuristic or feature"),
+        }),
+    }
 }
 
 fn load_or_refresh_snapshot(
@@ -240,6 +303,47 @@ fn print_feature_record(record: &SenatorFeatureRecord) {
     );
     for note in &record.notes {
         println!("  - {note}");
+    }
+}
+
+fn print_stance_details(stance: &senate_simulator::SenatorStance) {
+    println!(
+        "Stance {} on {}: substantive={:.2}, procedural={:.2}, public={:.2}, label={:?}, posture={:?}",
+        stance.senator_id,
+        stance.object_id,
+        stance.substantive_support,
+        stance.procedural_support,
+        stance.public_support,
+        stance.stance_label,
+        stance.procedural_posture
+    );
+    if let Some(breakdown) = &stance.score_breakdown {
+        println!(
+            "  breakdown: domain={:.2}, procedural={:.2}, party={:.2}, coverage={:.2}",
+            breakdown.domain_affinity_score,
+            breakdown.procedural_compatibility_score,
+            breakdown.party_alignment_score,
+            breakdown.coverage_score
+        );
+        println!(
+            "  adjustments: salience={:.2}, controversy={:.2}, recent_drift={:.2}, attendance={:.2}",
+            breakdown.salience_adjustment,
+            breakdown.controversy_adjustment,
+            breakdown.recent_drift_adjustment,
+            breakdown.attendance_adjustment
+        );
+        for note in &breakdown.fallback_notes {
+            println!("  - {note}");
+        }
+        for factor in &stance.top_factors {
+            if !breakdown.fallback_notes.contains(factor) {
+                println!("  - {factor}");
+            }
+        }
+        return;
+    }
+    for factor in &stance.top_factors {
+        println!("  - {factor}");
     }
 }
 

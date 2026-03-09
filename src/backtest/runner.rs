@@ -3,7 +3,8 @@ use std::{fs, path::Path};
 use chrono::NaiveDate;
 
 use crate::{
-    analyze_chamber, derive_stance,
+    analyze_chamber, derive_stance_with_mode,
+    derive::StanceDerivationMode,
     error::SenateSimError,
     features::materialize::{senators_for_snapshot, SenatorProfileMode},
     ingest::{
@@ -22,11 +23,24 @@ pub fn run_backtest(
     snapshot_date: NaiveDate,
     object_id: &str,
 ) -> Result<BacktestResult, SenateSimError> {
+    run_backtest_with_mode(
+        snapshot_date,
+        object_id,
+        StanceDerivationMode::FeatureDriven,
+    )
+}
+
+pub fn run_backtest_with_mode(
+    snapshot_date: NaiveDate,
+    object_id: &str,
+    mode: StanceDerivationMode,
+) -> Result<BacktestResult, SenateSimError> {
     run_backtest_with_roots(
         snapshot_date,
         object_id,
         Path::new("data"),
         Path::new("fixtures/ingest"),
+        mode,
     )
 }
 
@@ -35,6 +49,7 @@ pub fn run_backtest_with_roots(
     object_id: &str,
     data_root: &Path,
     fixture_root: &Path,
+    mode: StanceDerivationMode,
 ) -> Result<BacktestResult, SenateSimError> {
     let snapshot = match load_snapshot(data_root, snapshot_date) {
         Ok(snapshot) => snapshot,
@@ -57,7 +72,7 @@ pub fn run_backtest_with_roots(
 
     let stances = senators
         .iter()
-        .map(|senator| derive_stance(senator, legislative_object, context))
+        .map(|senator| derive_stance_with_mode(senator, legislative_object, context, mode))
         .collect::<Result<Vec<_>, _>>()?;
     let analysis = analyze_chamber(legislative_object, context, &stances)?;
     let prediction = predict_next_event(legislative_object, context, &analysis)?;
@@ -194,6 +209,8 @@ fn build_notes(
 mod tests {
     use chrono::NaiveDate;
 
+    use crate::derive::StanceDerivationMode;
+
     use super::run_backtest_with_roots;
 
     #[test]
@@ -205,6 +222,7 @@ mod tests {
             "s_2100",
             &temp_dir,
             std::path::Path::new("fixtures/ingest"),
+            StanceDerivationMode::FeatureDriven,
         )
         .unwrap();
 

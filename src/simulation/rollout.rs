@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     analysis::chamber::analyze_chamber,
     analysis::transition::predict_next_event,
-    derive::stance::derive_stance,
+    derive::{stance::derive_stance_with_mode, StanceDerivationMode},
     error::SenateSimError,
     model::{
         senate_event::SenateEvent,
@@ -18,6 +18,14 @@ pub fn rollout(
     initial_state: &SimulationState,
     max_steps: usize,
 ) -> Result<TrajectoryResult, SenateSimError> {
+    rollout_with_mode(initial_state, max_steps, StanceDerivationMode::FeatureDriven)
+}
+
+pub fn rollout_with_mode(
+    initial_state: &SimulationState,
+    max_steps: usize,
+    mode: StanceDerivationMode,
+) -> Result<TrajectoryResult, SenateSimError> {
     initial_state.validate()?;
 
     let mut current_state = initial_state.clone();
@@ -29,10 +37,11 @@ pub fn rollout(
             .roster
             .iter()
             .map(|senator| {
-                derive_stance(
+                derive_stance_with_mode(
                     senator,
                     &current_state.legislative_object,
                     &current_state.context,
+                    mode,
                 )
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -133,7 +142,8 @@ mod tests {
     use crate::{
         BudgetaryImpact, Chamber, CongressionalSession, LegislativeContext, LegislativeObject,
         LegislativeObjectType, Party, PolicyDomain, ProceduralStage, SenateEvent, SimulationState,
-        TerminationReason, analyze_chamber, build_synthetic_senate, derive_stance, rollout,
+        StanceDerivationMode, TerminationReason, analyze_chamber, build_synthetic_senate,
+        derive_stance_with_mode, rollout,
         simulation::apply::apply_event,
     };
 
@@ -252,7 +262,13 @@ mod tests {
             .roster
             .iter()
             .map(|senator| {
-                derive_stance(senator, &state.legislative_object, &state.context).unwrap()
+                derive_stance_with_mode(
+                    senator,
+                    &state.legislative_object,
+                    &state.context,
+                    StanceDerivationMode::FeatureDriven,
+                )
+                .unwrap()
             })
             .collect::<Vec<_>>();
         let analysis_before =
@@ -263,7 +279,13 @@ mod tests {
             .roster
             .iter()
             .map(|senator| {
-                derive_stance(senator, &next_state.legislative_object, &next_state.context).unwrap()
+                derive_stance_with_mode(
+                    senator,
+                    &next_state.legislative_object,
+                    &next_state.context,
+                    StanceDerivationMode::FeatureDriven,
+                )
+                .unwrap()
             })
             .collect::<Vec<_>>();
         let analysis_after = analyze_chamber(

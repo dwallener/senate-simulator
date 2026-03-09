@@ -571,6 +571,7 @@ mod tests {
                 PublicPosition::Negotiating
             },
             top_factors: vec!["synthetic".to_string()],
+            score_breakdown: None,
         }
     }
 

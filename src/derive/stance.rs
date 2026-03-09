@@ -1,4 +1,5 @@
 use crate::{
+    derive::{feature_driven::derive_stance_feature_driven, StanceDerivationMode},
     error::SenateSimError,
     model::{
         dynamic_state::PublicPosition,
@@ -22,6 +23,35 @@ struct DerivedScores {
 }
 
 pub fn derive_stance(
+    senator: &Senator,
+    legislative_object: &LegislativeObject,
+    context: &LegislativeContext,
+) -> Result<SenatorStance, SenateSimError> {
+    derive_stance_with_mode(
+        senator,
+        legislative_object,
+        context,
+        StanceDerivationMode::FeatureDriven,
+    )
+}
+
+pub fn derive_stance_with_mode(
+    senator: &Senator,
+    legislative_object: &LegislativeObject,
+    context: &LegislativeContext,
+    mode: StanceDerivationMode,
+) -> Result<SenatorStance, SenateSimError> {
+    match mode {
+        StanceDerivationMode::Heuristic => {
+            derive_stance_heuristic(senator, legislative_object, context)
+        }
+        StanceDerivationMode::FeatureDriven => {
+            derive_stance_feature_driven(senator, legislative_object, context)
+        }
+    }
+}
+
+pub fn derive_stance_heuristic(
     senator: &Senator,
     legislative_object: &LegislativeObject,
     context: &LegislativeContext,
@@ -75,6 +105,7 @@ pub fn derive_stance(
         ),
         public_position: derive_public_position(public_support),
         top_factors: build_top_factors(senator, legislative_object, context, scores),
+        score_breakdown: None,
     };
 
     stance.validate()?;
@@ -556,6 +587,8 @@ mod tests {
                 current_party_pressure: 0.61,
                 current_issue_salience_in_state: 0.58,
             },
+            feature_coverage_score: None,
+            feature_notes: vec![],
         }
     }
 

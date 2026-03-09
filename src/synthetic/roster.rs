@@ -93,6 +93,8 @@ fn build_synthetic_senator(index: usize) -> Senator {
         issue_preferences,
         procedural,
         dynamic_state,
+        feature_coverage_score: None,
+        feature_notes: vec![],
     }
 }
 

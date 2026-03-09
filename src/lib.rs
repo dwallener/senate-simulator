@@ -13,7 +13,10 @@ pub mod synthetic;
 pub use analysis::chamber::analyze_chamber;
 pub use analysis::floor_action::assess_floor_action;
 pub use analysis::transition::predict_next_event;
-pub use backtest::runner::run_backtest;
+pub use backtest::runner::{run_backtest, run_backtest_with_mode};
+pub use derive::feature_driven::derive_stance_feature_driven;
+pub use derive::stance::{derive_stance_heuristic, derive_stance_with_mode};
+pub use derive::StanceDerivationMode;
 pub use derive::stance::derive_stance;
 pub use error::SenateSimError;
 pub use eval::align::{align_action_to_senate_event, is_consequential_action};
@@ -22,7 +25,10 @@ pub use eval::examples::{
     generate_actual_trajectory, generate_next_event_examples, load_evaluation_artifacts,
     persist_evaluation_artifacts,
 };
-pub use eval::runner::{evaluate_from_snapshot_date, evaluate_snapshot_examples};
+pub use eval::runner::{
+    evaluate_from_snapshot_date, evaluate_from_snapshot_date_with_mode,
+    evaluate_snapshot_examples,
+};
 pub use features::materialize::{
     build_and_persist_features, feature_record_to_senator, senators_for_snapshot,
     snapshot_with_features_to_senators, SenatorProfileMode,
@@ -64,9 +70,10 @@ pub use model::senate_analysis::{PivotSummary, SenateAnalysis, SenatorSignalSumm
 pub use model::senate_event::SenateEvent;
 pub use model::senator::Senator;
 pub use model::senator_stance::{ProceduralPosture, SenatorStance, StanceLabel};
+pub use model::stance_score_breakdown::StanceScoreBreakdown;
 pub use model::simulation_state::SimulationState;
 pub use model::simulation_step::{SimulationStep, StepAnalysisSummary};
 pub use model::trajectory_result::{TerminationReason, TrajectoryResult};
 pub use simulation::apply::apply_event;
-pub use simulation::rollout::rollout;
+pub use simulation::rollout::{rollout, rollout_with_mode};
 pub use synthetic::roster::build_synthetic_senate;
