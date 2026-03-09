@@ -222,15 +222,17 @@ mod tests {
                     "members": [
                         {
                             "bioguideId": "A0001",
-                            "directOrderName": "Alex Adams",
-                            "party": "D",
-                            "state": "WA"
+                            "directOrderName": "Adams, Alex",
+                            "partyName": "Democratic",
+                            "state": "Washington",
+                            "terms": { "item": [{ "chamber": "Senate", "startYear": 2025 }] }
                         },
                         {
                             "bioguideId": "B0002",
-                            "directOrderName": "Blair Baker",
-                            "party": "R",
-                            "state": "TX"
+                            "directOrderName": "Baker, Blair",
+                            "partyName": "Republican",
+                            "state": "Texas",
+                            "terms": { "item": [{ "chamber": "Senate", "startYear": 2023 }] }
                         }
                     ]
                 }
@@ -274,7 +276,7 @@ mod tests {
         .unwrap();
         write_string(
             &raw_dir.join("senate_vote_index.xml"),
-            r#"<roll_call_votes><vote><vote_number>1</vote_number><vote_date>January 15, 2026</vote_date></vote></roll_call_votes>"#,
+            r#"<vote_summary><congress_year>2026</congress_year><votes><vote><vote_number>1</vote_number><vote_date>15-Jan</vote_date></vote></votes></vote_summary>"#,
         )
         .unwrap();
         write_string(

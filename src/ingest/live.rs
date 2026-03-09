@@ -174,14 +174,9 @@ fn build_roster_records(
     let fetched_at = fetched_at_for(run_date)?;
     extract_congress_items(members_payload, &["members", "member"])
         .into_iter()
-        .filter(|member| {
-            member
-                .get("terms")
-                .and_then(|terms| terms.get("item"))
-                .is_some()
-                || member.get("state").is_some()
-        })
+        .filter(|member| senate_term(member).is_some())
         .map(|member| {
+            let senate_term = senate_term(&member);
             let entry = json!({
                 "source_member_id": member
                     .get("bioguideId")
@@ -196,10 +191,9 @@ fn build_roster_records(
                     .unwrap_or("Unknown Member"),
                 "party": member_party(&member),
                 "state": member_state(&member),
-                "start_date": member
-                    .pointer("/terms/item/0/startYear")
-                    .and_then(Value::as_str)
-                    .map(|year| format!("{year}-01-03")),
+                "start_date": senate_term
+                    .and_then(|term| term.get("startYear"))
+                    .and_then(year_to_string_date),
                 "end_date": Value::Null,
                 "source_name": "congress_api",
                 "source_identifier": member
@@ -314,7 +308,27 @@ pub fn reconcile_vote_member_ids(
         .map(|mut vote| {
             if let Some(roster) = roster_records.iter().find(|roster| {
                 roster.source_member_id.eq_ignore_ascii_case(&vote.senator_id)
-                    || (normalize_name(&roster.name) == normalize_name(&vote.senator_name)
+                    || (canonical_name_parts(&roster.name) == canonical_name_parts(&vote.senator_name)
+                        && roster.state.eq_ignore_ascii_case(
+                            vote.raw_payload
+                                .get("member")
+                                .and_then(|member| member.get("state"))
+                                .and_then(Value::as_str)
+                                .unwrap_or(""),
+                        ))
+                    || (roster
+                        .name
+                        .split(',')
+                        .next()
+                        .map(str::trim)
+                        .unwrap_or("")
+                        .eq_ignore_ascii_case(
+                            vote.raw_payload
+                                .get("member")
+                                .and_then(|member| member.get("last_name"))
+                                .and_then(Value::as_str)
+                                .unwrap_or(""),
+                        )
                         && roster.state.eq_ignore_ascii_case(
                             vote.raw_payload
                                 .get("member")
@@ -370,6 +384,7 @@ fn member_party(member: &Value) -> String {
     member
         .pointer("/terms/item/0/party")
         .or_else(|| member.pointer("/terms/item/0/partyName"))
+        .or_else(|| member.get("partyName"))
         .or_else(|| member.get("party"))
         .and_then(Value::as_str)
         .unwrap_or("Unknown")
@@ -452,12 +467,42 @@ fn state_name_to_code(value: &str) -> Option<String> {
     Some(code.to_string())
 }
 
-fn normalize_name(value: &str) -> String {
+fn senate_term(member: &Value) -> Option<&Value> {
+    member
+        .get("terms")
+        .and_then(|terms| terms.get("item"))
+        .and_then(Value::as_array)
+        .and_then(|terms| {
+            terms.iter().rev().find(|term| {
+                term.get("chamber")
+                    .and_then(Value::as_str)
+                    .map(|value| value.eq_ignore_ascii_case("Senate"))
+                    .unwrap_or(false)
+            })
+        })
+}
+
+fn year_to_string_date(value: &Value) -> Option<String> {
     value
+        .as_i64()
+        .map(|year| format!("{year}-01-03"))
+        .or_else(|| value.as_str().map(|year| format!("{year}-01-03")))
+}
+
+fn canonical_name_parts(value: &str) -> Vec<String> {
+    let mut parts = value
+        .replace(',', " ")
         .to_ascii_lowercase()
-        .chars()
-        .filter(|ch| ch.is_ascii_alphanumeric())
-        .collect()
+        .split_whitespace()
+        .map(|part| {
+            part.chars()
+                .filter(|ch| ch.is_ascii_alphanumeric())
+                .collect::<String>()
+        })
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>();
+    parts.sort();
+    parts
 }
 
 #[cfg(test)]
@@ -480,9 +525,10 @@ mod tests {
                 "members": [
                     {
                         "bioguideId": "A0001",
-                        "directOrderName": "Alex Adams",
-                        "party": "D",
-                        "state": "WA"
+                        "directOrderName": "Adams, Alex",
+                        "partyName": "Democratic",
+                        "state": "Washington",
+                        "terms": { "item": [{ "chamber": "Senate", "startYear": 2025 }] }
                     }
                 ]
             }
@@ -514,6 +560,9 @@ mod tests {
         let legislation = build_legislative_records(run_date, &extract_congress_items(&bills, &["bills"])).unwrap();
         let action_records = build_action_records(run_date, &actions).unwrap();
         assert_eq!(roster.len(), 1);
+        assert_eq!(roster[0].party, "Democratic");
+        assert_eq!(roster[0].state, "WA");
+        assert_eq!(roster[0].start_date, Some(NaiveDate::from_ymd_opt(2025, 1, 3).unwrap()));
         assert_eq!(legislation[0].source_object_id, "s2100");
         assert_eq!(action_records[0].chamber, Chamber::Senate);
     }
@@ -522,7 +571,7 @@ mod tests {
     fn reconciles_member_ids_between_roster_and_votes() {
         let roster = vec![crate::model::raw_records::RawRosterRecord {
             source_member_id: "A0001".to_string(),
-            name: "Alex Adams".to_string(),
+            name: "Adams, Alex".to_string(),
             party: "D".to_string(),
             state: "WA".to_string(),
             chamber: Chamber::Senate,

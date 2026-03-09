@@ -59,7 +59,45 @@ impl CongressApiClient {
     }
 
     pub fn fetch_members(&self) -> Result<(Value, RateLimitStatus, String), SenateSimError> {
-        self.fetch_json("/member", &[("currentMember", "true"), ("format", "json")])
+        let mut offset = 0usize;
+        let mut all_members = Vec::new();
+        let (combined_payload, last_status, last_url) = loop {
+            let offset_string = offset.to_string();
+            let (payload, status, url) = self.fetch_json(
+                "/member",
+                &[
+                    ("currentMember", "true"),
+                    ("format", "json"),
+                    ("limit", "250"),
+                    ("offset", offset_string.as_str()),
+                ],
+            )?;
+            let page_url = url;
+
+            let page_members = payload
+                .get("members")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            let page_len = page_members.len();
+            all_members.extend(page_members);
+
+            let next = payload
+                .get("pagination")
+                .and_then(|value| value.get("next"))
+                .and_then(Value::as_str);
+            if next.is_none() || page_len == 0 {
+                let combined = serde_json::json!({
+                    "members": all_members,
+                    "pagination": payload.get("pagination").cloned().unwrap_or(Value::Null),
+                });
+                break (combined, status, page_url);
+            }
+
+            offset += page_len;
+        };
+
+        Ok((combined_payload, last_status, last_url))
     }
 
     pub fn fetch_bill_actions(

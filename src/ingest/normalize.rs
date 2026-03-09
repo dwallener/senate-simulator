@@ -140,7 +140,10 @@ fn normalize_vote_record(record: &RawVoteRecord) -> Result<NormalizedVoteRecord,
 }
 
 fn parse_party(value: &str) -> Party {
-    if value.eq_ignore_ascii_case("D") || value.eq_ignore_ascii_case("Democrat") {
+    if value.eq_ignore_ascii_case("D")
+        || value.eq_ignore_ascii_case("Democrat")
+        || value.eq_ignore_ascii_case("Democratic")
+    {
         Party::Democrat
     } else if value.eq_ignore_ascii_case("R") || value.eq_ignore_ascii_case("Republican") {
         Party::Republican
