@@ -1,11 +1,12 @@
 use serde::Serialize;
 
 use senate_simulator::{
-    FloorActionAssessment, SenateAnalysis, SenatorSignalSummary, analyze_chamber,
-    assess_floor_action, build_synthetic_senate, derive_stance,
+    FloorActionAssessment, NextEventPrediction, SenateAnalysis, SenatorSignalSummary,
+    analyze_chamber, assess_floor_action, build_synthetic_senate, derive_stance,
     io::json::{
         load_legislative_context_from_path, load_legislative_object_from_path, to_pretty_json,
     },
+    predict_next_event,
 };
 
 #[derive(Debug, Serialize)]
@@ -13,6 +14,7 @@ struct DemoOutput {
     roster_size: usize,
     chamber_analysis: SenateAnalysis,
     floor_action_assessment: FloorActionAssessment,
+    next_event_prediction: NextEventPrediction,
     top_pivots: Vec<senate_simulator::PivotSummary>,
     top_blockers: Vec<SenatorSignalSummary>,
 }
@@ -59,16 +61,35 @@ fn main() {
                 std::process::exit(1);
             }
         };
+    let next_event_prediction =
+        match predict_next_event(&legislative_object, &context, &chamber_analysis) {
+            Ok(prediction) => prediction,
+            Err(error) => {
+                eprintln!("Failed to predict next event: {error}");
+                std::process::exit(1);
+            }
+        };
 
     println!(
-        "Synthetic Senate demo: roster={}, majority_viable={}, cloture_viable={}, predicted_action={}",
+        "Synthetic Senate demo: roster={}, majority_viable={}, cloture_viable={}, predicted_action={}, next_event={}",
         roster.len(),
         chamber_analysis.simple_majority_viable,
         chamber_analysis.cloture_viable,
-        floor_action_assessment.predicted_action
+        floor_action_assessment.predicted_action,
+        next_event_prediction.predicted_event
     );
     for reason in &floor_action_assessment.top_reasons {
         println!("- {reason}");
+    }
+    println!(
+        "Most likely next event: {} ({:.2} confidence)",
+        next_event_prediction.predicted_event, next_event_prediction.confidence
+    );
+    for alternative in &next_event_prediction.alternative_events {
+        println!(
+            "  alt: {} {:.2} {}",
+            alternative.event, alternative.score, alternative.reason
+        );
     }
 
     let output = DemoOutput {
@@ -87,6 +108,7 @@ fn main() {
             .collect(),
         chamber_analysis,
         floor_action_assessment,
+        next_event_prediction,
     };
 
     match to_pretty_json(&output) {

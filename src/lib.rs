@@ -7,6 +7,7 @@ pub mod synthetic;
 
 pub use analysis::chamber::analyze_chamber;
 pub use analysis::floor_action::assess_floor_action;
+pub use analysis::transition::predict_next_event;
 pub use derive::stance::derive_stance;
 pub use error::SenateSimError;
 pub use model::dynamic_state::PublicPosition;
@@ -18,8 +19,10 @@ pub use model::legislative::{
 pub use model::legislative_context::{
     Chamber, CongressionalSession, LegislativeContext, ProceduralStage,
 };
+pub use model::next_event_prediction::{EventScore, NextEventPrediction};
 pub use model::scenario::SenatorScenario;
 pub use model::senate_analysis::{PivotSummary, SenateAnalysis, SenatorSignalSummary};
+pub use model::senate_event::SenateEvent;
 pub use model::senator::Senator;
 pub use model::senator_stance::{ProceduralPosture, SenatorStance, StanceLabel};
 pub use synthetic::roster::build_synthetic_senate;
