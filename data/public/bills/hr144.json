@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-03-09",
+  "generated_at": "2026-03-09T21:43:06.582302+00:00",
+  "object_id": "hr144",
+  "label": "Tennessee Valley Authority Salary Transparency Act",
+  "title": "Tennessee Valley Authority Salary Transparency Act",
+  "summary": "Summary unavailable in source payload",
+  "stage": "InCommittee",
+  "support_count": 0,
+  "lean_support_count": 53,
+  "undecided_count": 2,
+  "oppose_count": 45,
+  "majority_viable": true,
+  "cloture_viable": false,
+  "expected_present_count": 94,
+  "coalition_stability": 0.29051036,
+  "filibuster_risk": 0.3369382,
+  "predicted_floor_action": "LikelyNegotiation",
+  "floor_action_confidence": 0.19619185,
+  "support_margin_estimate": 5,
+  "cloture_gap_estimate": -8,
+  "predicted_next_event": "NoMeaningfulMovement",
+  "next_event_score": 0.6339387,
+  "next_event_confidence": 0.4763849,
+  "alternatives": [
+    {
+      "event": "NegotiationIntensifies",
+      "score": 0.6129992,
+      "reason": "near-threshold numbers and pivotal senators keep bargaining active"
+    },
+    {
+      "event": "MotionToProceedAttempted",
+      "score": 0.5858797,
+      "reason": "leadership has enough incentive to test floor access"
+    },
+    {
+      "event": "LeadershipSignalsAction",
+      "score": 0.4908,
+      "reason": "leadership pressure is building even without a clean formal path"
+    }
+  ],
+  "pivots": [
+    {
+      "senator_id": "real_t000250",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.61175066,
+      "procedural_support": 0.64786345,
+      "negotiability": 0.14874214,
+      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+    },
+    {
+      "senator_id": "real_t000278",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.6146368,
+      "procedural_support": 0.6765105,
+      "negotiability": 0.10936149,
+      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+    },
+    {
+      "senator_id": "real_l000577",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.6153359,
+      "procedural_support": 0.68134147,
+      "negotiability": 0.108744495,
+      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+    },
+    {
+      "senator_id": "real_p000603",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.602201,
+      "procedural_support": 0.7121123,
+      "negotiability": 0.1466147,
+      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+    },
+    {
+      "senator_id": "real_j000293",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.6153359,
+      "procedural_support": 0.6846748,
+      "negotiability": 0.108744495,
+      "reason": "marginal support and meaningful negotiability make this senator pivotal"
+    }
+  ],
+  "blockers": [
+    {
+      "senator_id": "real_b001267",
+      "public_position": "undeclared",
+      "defection_probability": 0.0,
+      "rigidity": 0.8597406,
+      "reason": "low procedural support and high rigidity mark a likely blocker"
+    },
+    {
+      "senator_id": "real_b001288",
+      "public_position": "undeclared",
+      "defection_probability": 0.0,
+      "rigidity": 0.8597406,
+      "reason": "low procedural support and high rigidity mark a likely blocker"
+    },
+    {
+      "senator_id": "real_c001088",
+      "public_position": "undeclared",
+      "defection_probability": 0.0,
+      "rigidity": 0.8597406,
+      "reason": "low procedural support and high rigidity mark a likely blocker"
+    },
+    {
+      "senator_id": "real_w000790",
+      "public_position": "undeclared",
+      "defection_probability": 0.0,
+      "rigidity": 0.8597406,
+      "reason": "low procedural support and high rigidity mark a likely blocker"
+    },
+    {
+      "senator_id": "real_v000128",
+      "public_position": "mixed",
+      "defection_probability": 0.0,
+      "rigidity": 0.8208933,
+      "reason": "low procedural support and high rigidity mark a likely blocker"
+    }
+  ],
+  "defectors": [],
+  "rollout_steps": [
+    {
+      "step_index": 0,
+      "starting_stage": "InCommittee",
+      "predicted_event": "NoMeaningfulMovement",
+      "confidence": 0.4763849,
+      "support_count": 0,
+      "lean_support_count": 53,
+      "undecided_count": 2,
+      "oppose_count": 0,
+      "simple_majority_viable": true,
+      "cloture_viable": false
+    },
+    {
+      "step_index": 1,
+      "starting_stage": "InCommittee",
+      "predicted_event": "NoMeaningfulMovement",
+      "confidence": 0.5084015,
+      "support_count": 0,
+      "lean_support_count": 53,
+      "undecided_count": 2,
+      "oppose_count": 0,
+      "simple_majority_viable": true,
+      "cloture_viable": false
+    }
+  ],
+  "top_findings": [
+    "current support coalition is 53 likely/lean supporters out of 94 expected present",
+    "simple majority is viable at an estimated 54.7 votes against a 48-vote threshold",
+    "cloture remains short at an estimated 30.8 procedural votes",
+    "coalition stability is weak and vulnerable to movement",
+    "5 likely procedural blockers materially raise filibuster risk"
+  ],
+  "top_reasons": [
+    "weak coalition pressure and low immediate urgency favor inaction",
+    "simple-majority math currently favors action",
+    "procedural coalition is weak enough to constrain floor movement",
+    "deadline and media pressure reduce the odds of passive drift",
+    "simple majority coalition exists in the current chamber snapshot",
+    "cloture path remains below the 60-vote threshold",
+    "limited leadership priority reduces pressure for immediate floor action",
+    "fragile coalition dynamics point toward bargaining rather than clean passage"
+  ],
+  "termination_reason": "NoMeaningfulFurtherMovement"
+}

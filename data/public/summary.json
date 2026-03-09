@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-03-09",
+  "generated_at": "2026-03-09T21:43:06.582302+00:00",
+  "tracked_bill_count": 1,
+  "exported_bill_count": 1,
+  "rows": [
+    {
+      "object_id": "hr144",
+      "label": "Tennessee Valley Authority Salary Transparency Act",
+      "title": "Tennessee Valley Authority Salary Transparency Act",
+      "stage": "InCommittee",
+      "support_count": 0,
+      "lean_support_count": 53,
+      "undecided_count": 2,
+      "oppose_count": 45,
+      "majority_viable": true,
+      "cloture_viable": false,
+      "predicted_floor_action": "LikelyNegotiation",
+      "predicted_next_event": "NoMeaningfulMovement",
+      "next_event_score": 0.6339387,
+      "next_event_confidence": 0.4763849,
+      "last_updated": "2026-03-09"
+    }
+  ],
+  "notes": []
+}

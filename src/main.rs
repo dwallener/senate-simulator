@@ -4,6 +4,7 @@ use senate_simulator::{
     FeatureReport, FeatureWindowConfig, SenatorFeatureRecord, build_and_persist_features,
     IngestionConfig, IngestionSourceMode, SenatorProfileMode, StanceDerivationMode, analyze_chamber,
     assess_floor_action, build_evaluation_artifacts_for_snapshot_date, derive_stance_with_mode,
+    export_public_artifacts,
     evaluate_from_snapshot_date_with_mode, load_feature_records, load_snapshot,
     predict_next_event, rollout_with_mode, run_backtest_with_mode, run_daily_ingestion,
     run_ingestion, senators_for_snapshot, snapshot_to_contexts, snapshot_to_legislative_objects,
@@ -19,6 +20,7 @@ fn main() {
         Some("eval-run") => run_eval_run_command(&args[1..]),
         Some("features-build") => run_features_build_command(&args[1..]),
         Some("features-inspect") => run_features_inspect_command(&args[1..]),
+        Some("predict-export") => run_predict_export_command(&args[1..]),
         Some("predict-bill") => run_predict_bill_command(&args[1..]),
         Some("signals-inspect") => run_signals_inspect_command(&args[1..]),
         Some("stance-inspect") => run_stance_inspect_command(&args[1..]),
@@ -143,6 +145,35 @@ fn run_features_inspect_command(args: &[String]) -> Result<(), senate_simulator:
             message: format!("senator_id {senator_id} not found in feature artifacts"),
         })?;
     print_feature_record(&record);
+    Ok(())
+}
+
+fn run_predict_export_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let tracked_bills_file = parse_date_arg(args, "--tracked-bills-file").unwrap_or("tracked_bills.json");
+    let out = parse_date_arg(args, "--out").unwrap_or("data/public");
+    let mode = parse_stance_mode(parse_date_arg(args, "--stance-mode").unwrap_or("feature"))?;
+    let steps = parse_date_arg(args, "--steps")
+        .and_then(|value| value.parse::<usize>().ok())
+        .unwrap_or(3);
+    let snapshot_date = parse_date(date)?;
+    let artifacts = export_public_artifacts(
+        snapshot_date,
+        std::path::Path::new(tracked_bills_file),
+        std::path::Path::new(out),
+        mode,
+        steps,
+    )?;
+    println!(
+        "Public export {}: tracked={} exported={} out={}",
+        snapshot_date,
+        artifacts.last_updated.tracked_bill_count,
+        artifacts.last_updated.exported_bill_count,
+        out
+    );
+    for note in &artifacts.summary.notes {
+        println!("  - {note}");
+    }
     Ok(())
 }
 

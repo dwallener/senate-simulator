@@ -4,3 +4,5 @@
 /data/snapshots
 /data/evaluation
 /data/features
+!/data/public
+!/data/public/**

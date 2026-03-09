@@ -104,12 +104,59 @@ cargo run -q -- signals-inspect --date 2026-03-09 --object-id hr144
 cargo run -q -- signals-inspect --date 2026-03-09 --senator-id real_s000148
 ```
 
+### 8. Export public dashboard artifacts
+
+```bash
+cargo run -q -- predict-export --date 2026-03-09 --tracked-bills-file tracked_bills.json --out data/public --stance-mode feature --steps 3
+```
+
 ### Notes
 
 - Live ingest requires `API_KEY_DATA_GOV`.
 - GDELT enrichment is optional and best-effort.
 - All ingestion, feature, evaluation, and backtest flows are snapshot-date scoped.
 - Historical labeling and evaluation are designed to be future-only relative to the snapshot date.
+
+---
+
+## Streamlit dashboard
+
+The public Streamlit deployment is intentionally simple:
+
+- `streamlit_app.py` is the Streamlit Community Cloud entrypoint.
+- The app reads only committed JSON artifacts under `data/public/`.
+- The app does not run ingestion, feature building, or prediction live.
+
+### Public artifact flow
+
+1. Run the Rust batch pipeline locally or in a scheduled job.
+2. Export compact dashboard artifacts with `predict-export`.
+3. Commit and push `data/public/`.
+4. Streamlit Community Cloud redeploys from the updated GitHub repo.
+
+### Daily refresh script
+
+```bash
+bash scripts/daily_refresh.sh 2026-03-09
+```
+
+The script runs:
+
+- `ingest`
+- `features-build`
+- `predict-export`
+- `git add data/public`
+- `git commit`
+- `git push`
+
+### Files the app reads
+
+- `data/public/last_updated.json`
+- `data/public/summary.json`
+- `data/public/tracked_bills.json`
+- `data/public/bills/<object_id>.json`
+
+This keeps the public deployment zero-cost and avoids running Rust ingestion or live API calls inside Streamlit.
 
 ---
 
@@ -435,4 +482,3 @@ A senator object might look conceptually like this:
 }
 
 This is only illustrative. The exact schema can change.
-

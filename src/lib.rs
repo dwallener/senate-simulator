@@ -7,6 +7,7 @@ pub mod features;
 pub mod ingest;
 pub mod io;
 pub mod model;
+pub mod public_artifacts;
 pub mod simulation;
 pub mod synthetic;
 
@@ -78,6 +79,11 @@ pub use model::stance_score_breakdown::StanceScoreBreakdown;
 pub use model::simulation_state::SimulationState;
 pub use model::simulation_step::{SimulationStep, StepAnalysisSummary};
 pub use model::trajectory_result::{TerminationReason, TrajectoryResult};
+pub use public_artifacts::{
+    export_public_artifacts, export_public_artifacts_with_roots, load_tracked_bills_manifest,
+    ExportArtifacts, PublicBillDetail, PublicLastUpdated, PublicSummary, PublicTrackedBill,
+    PublicTrackedBills, TrackedBillEntry, TrackedBillsManifest,
+};
 pub use simulation::apply::apply_event;
 pub use simulation::rollout::{rollout, rollout_with_mode};
 pub use synthetic::roster::build_synthetic_senate;
