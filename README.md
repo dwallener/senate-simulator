@@ -14,6 +14,105 @@ So the first step is to define what a **senator** is in the model.
 
 ---
 
+## How to use it
+
+The simulator now supports both fixture-based runs and live dated snapshots. The fastest way to exercise the full pipeline is:
+
+### 1. Build a dated snapshot
+
+Fixture snapshot:
+
+```bash
+cargo run -q -- ingest --date 2026-03-09 --source fixtures
+```
+
+Live snapshot:
+
+```bash
+export API_KEY_DATA_GOV=...
+cargo run -q -- ingest --date 2026-03-09 --source live
+```
+
+Live snapshot with optional public-signal enrichment:
+
+```bash
+cargo run -q -- ingest --date 2026-03-09 --source live --include-gdelt
+```
+
+Use `--reuse-raw` when you want to rebuild normalized artifacts and snapshots from already-fetched raw files.
+
+### 2. Build senator features from the snapshot
+
+```bash
+cargo run -q -- features-build --date 2026-03-09
+```
+
+Inspect one senator’s historical feature record:
+
+```bash
+cargo run -q -- features-inspect --date 2026-03-09 --senator-id real_s000148
+```
+
+### 3. Build and score the historical evaluation set
+
+Generate leakage-safe evaluation artifacts:
+
+```bash
+cargo run -q -- eval-build --date 2026-03-09
+```
+
+Run the evaluator with the feature-driven stance model:
+
+```bash
+cargo run -q -- eval-run --date 2026-03-09 --stance-mode feature
+```
+
+You can compare against the older heuristic path with `--stance-mode heuristic`.
+
+### 4. Backtest one real legislative object
+
+```bash
+cargo run -q -- backtest --date 2026-03-09 --object-id hr144 --stance-mode feature
+```
+
+This compares the predicted next event against the first aligned consequential event after the snapshot date. If there is no later aligned event, the backtest now treats that as `NoMeaningfulMovement`.
+
+### 5. Predict one bill end to end
+
+```bash
+cargo run -q -- predict-bill --date 2026-03-09 --object-id hr144 --stance-mode feature --steps 3
+```
+
+This runs:
+
+- senator stance derivation
+- chamber analysis
+- floor-action assessment
+- next-event prediction
+- a short rollout
+
+### 6. Inspect one senator/object stance
+
+```bash
+cargo run -q -- stance-inspect --date 2026-03-09 --object-id hr144 --senator-id real_s000148 --stance-mode feature
+```
+
+### 7. Inspect public-signal enrichment
+
+```bash
+cargo run -q -- signals-inspect --date 2026-03-09 --object-id hr144
+cargo run -q -- signals-inspect --date 2026-03-09 --senator-id real_s000148
+```
+
+### Notes
+
+- Live ingest requires `API_KEY_DATA_GOV`.
+- GDELT enrichment is optional and best-effort.
+- All ingestion, feature, evaluation, and backtest flows are snapshot-date scoped.
+- Historical labeling and evaluation are designed to be future-only relative to the snapshot date.
+
+---
+
 ## Why start here?
 
 A Senate outcome is not just a function of legislative text. It emerges from:
@@ -337,28 +436,6 @@ A senator object might look conceptually like this:
 
 This is only illustrative. The exact schema can change.
 
-⸻
-
-What success looks like for this step
-
-This step is complete when we have:
-	•	a clear senator ontology,
-	•	a schema that separates stable from dynamic properties,
-	•	a distinction between substantive and procedural behavior,
-	•	a way to represent signals versus votes,
-	•	and a minimal v1 object that can actually be implemented.
-
-If we get this right, later steps become much easier:
-	•	ingesting history,
-	•	estimating senator states over time,
-	•	predicting reactions to new legislative text,
-	•	simulating coalition formation,
-	•	and generating Senate-level outcomes.
-
-If we get this wrong, everything downstream becomes fuzzy.
-
-⸻
-
 Non-goals for this step
 
 This step does not attempt to:
@@ -388,5 +465,4 @@ In plain English:
 When a senator encounters a bill, amendment, motion, or procedural move, what internal state are we trying to estimate?
 
 That is the bridge between static senator profiles and actual simulation.
-
 
