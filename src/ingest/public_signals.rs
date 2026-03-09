@@ -1,6 +1,7 @@
 use std::{collections::{HashMap, HashSet}, path::Path};
 
 use chrono::NaiveDate;
+use reqwest::StatusCode;
 use serde_json::{Value, json};
 
 use crate::{
@@ -108,54 +109,67 @@ fn ingest_live_public_signals(
 
     for object in legislative_records.iter().take(query_limit) {
         let query = object_query(object);
-        let payload = fetch_or_load_query(config, &client, &raw_dir.join(format!("gdelt_object_{}.json", object.object_id)), &query)?;
-        records.push(raw_record_from_query(
-            config.run_date,
-            PublicSignalScope::LegislativeObject,
-            format!("gdelt_object_{}", object.object_id),
-            query,
-            None,
-            Some(object.object_id.clone()),
-            Some(object.policy_domain.clone()),
-            payload,
-        )?);
+        if let Some(payload) = fetch_or_load_query(
+            config,
+            &client,
+            &raw_dir.join(format!("gdelt_object_{}.json", object.object_id)),
+            &query,
+        )? {
+            records.push(raw_record_from_query(
+                config.run_date,
+                PublicSignalScope::LegislativeObject,
+                format!("gdelt_object_{}", object.object_id),
+                query,
+                None,
+                Some(object.object_id.clone()),
+                Some(object.policy_domain.clone()),
+                payload,
+            )?);
+        }
     }
 
     for senator in roster_records.iter().take(query_limit) {
         let query = senator_query(senator);
-        let payload = fetch_or_load_query(config, &client, &raw_dir.join(format!("gdelt_senator_{}.json", senator.senator_id)), &query)?;
-        records.push(raw_record_from_query(
-            config.run_date,
-            PublicSignalScope::Senator,
-            format!("gdelt_senator_{}", senator.senator_id),
-            query,
-            Some(senator.senator_id.clone()),
-            None,
-            None,
-            payload,
-        )?);
+        if let Some(payload) = fetch_or_load_query(
+            config,
+            &client,
+            &raw_dir.join(format!("gdelt_senator_{}.json", senator.senator_id)),
+            &query,
+        )? {
+            records.push(raw_record_from_query(
+                config.run_date,
+                PublicSignalScope::Senator,
+                format!("gdelt_senator_{}", senator.senator_id),
+                query,
+                Some(senator.senator_id.clone()),
+                None,
+                None,
+                payload,
+            )?);
+        }
     }
 
     let mut seen_domains = HashSet::new();
     for object in legislative_records.iter() {
         if seen_domains.insert(object.policy_domain.clone()) && seen_domains.len() <= query_limit {
             let query = domain_query(&object.policy_domain);
-            let payload = fetch_or_load_query(
+            if let Some(payload) = fetch_or_load_query(
                 config,
                 &client,
                 &raw_dir.join(format!("gdelt_domain_{}.json", sanitize_key(&object.policy_domain.to_string()))),
                 &query,
-            )?;
-            records.push(raw_record_from_query(
-                config.run_date,
-                PublicSignalScope::PolicyDomain,
-                format!("gdelt_domain_{}", sanitize_key(&object.policy_domain.to_string())),
-                query,
-                None,
-                None,
-                Some(object.policy_domain.clone()),
-                payload,
-            )?);
+            )? {
+                records.push(raw_record_from_query(
+                    config.run_date,
+                    PublicSignalScope::PolicyDomain,
+                    format!("gdelt_domain_{}", sanitize_key(&object.policy_domain.to_string())),
+                    query,
+                    None,
+                    None,
+                    Some(object.policy_domain.clone()),
+                    payload,
+                )?);
+            }
         }
     }
 
@@ -185,15 +199,25 @@ fn fetch_or_load_query(
     client: &GdeltClient,
     path: &Path,
     query: &str,
-) -> Result<Value, SenateSimError> {
+) -> Result<Option<Value>, SenateSimError> {
     if config.use_cached_raw_if_present && path.exists() {
         let contents = read_string(path)?;
-        return serde_json::from_str(&contents).map_err(|source| SenateSimError::Json {
+        let payload = serde_json::from_str(&contents).map_err(|source| SenateSimError::Json {
             path: path.to_path_buf(),
             source,
-        });
+        })?;
+        return Ok(Some(payload));
     }
-    let (payload, source_url) = client.fetch_query(query, config.gdelt_query_limit.max(10))?;
+    let (payload, source_url) = match client.fetch_query(query, config.gdelt_query_limit.max(10)) {
+        Ok(result) => result,
+        Err(SenateSimError::HttpStatus { status, .. }) if status == StatusCode::TOO_MANY_REQUESTS => {
+            return Ok(None);
+        }
+        Err(SenateSimError::UnexpectedResponseFormat { .. }) => {
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
+    };
     let wrapped = json!({
         "query": query,
         "source_url": source_url,
@@ -201,7 +225,7 @@ fn fetch_or_load_query(
         "payload": payload,
     });
     write_json_value(path, &wrapped)?;
-    Ok(wrapped)
+    Ok(Some(wrapped))
 }
 
 fn raw_record_from_query(
@@ -380,25 +404,51 @@ fn top_counts(map: HashMap<String, u32>) -> Vec<String> {
 }
 
 fn senator_query(senator: &NormalizedSenatorRecord) -> String {
-    format!("\"{}\" AND {}", senator.full_name, senator.state)
+    format!("\"{}\"", senator.full_name)
 }
 
 fn object_query(object: &NormalizedLegislativeRecord) -> String {
-    format!("\"{}\" OR {}", object.title, object.object_id)
+    let terms = object
+        .title
+        .split(|ch: char| !ch.is_ascii_alphanumeric())
+        .map(|token| token.trim().to_ascii_lowercase())
+        .filter(|token| token.len() >= 4)
+        .filter(|token| {
+            !matches!(
+                token.as_str(),
+                "bill"
+                    | "act"
+                    | "proposing"
+                    | "regarding"
+                    | "requiring"
+                    | "constitution"
+                    | "senate"
+                    | "house"
+            )
+        })
+        .take(3)
+        .collect::<Vec<_>>();
+
+    let short_phrase = terms.join(" ");
+    if short_phrase.is_empty() {
+        object.object_id.clone()
+    } else {
+        format!("(\"{}\" OR {})", short_phrase, object.object_id)
+    }
 }
 
 fn domain_query(domain: &PolicyDomain) -> String {
     match domain {
-        PolicyDomain::Defense => "defense OR pentagon".to_string(),
-        PolicyDomain::BudgetTax => "budget OR tax OR spending".to_string(),
-        PolicyDomain::Healthcare => "healthcare OR hospital OR medicare".to_string(),
-        PolicyDomain::Immigration => "immigration OR border".to_string(),
-        PolicyDomain::EnergyClimate => "energy OR climate OR permitting".to_string(),
-        PolicyDomain::Judiciary => "judiciary OR court OR judge".to_string(),
-        PolicyDomain::Technology => "technology OR privacy OR ai".to_string(),
-        PolicyDomain::ForeignPolicy => "foreign policy OR diplomacy".to_string(),
-        PolicyDomain::Labor => "labor OR workers OR union".to_string(),
-        PolicyDomain::Education => "education OR schools".to_string(),
+        PolicyDomain::Defense => "(defense OR pentagon)".to_string(),
+        PolicyDomain::BudgetTax => "(budget OR taxes OR spending)".to_string(),
+        PolicyDomain::Healthcare => "(healthcare OR hospital OR medicare)".to_string(),
+        PolicyDomain::Immigration => "(immigration OR border)".to_string(),
+        PolicyDomain::EnergyClimate => "(energy OR climate OR permitting)".to_string(),
+        PolicyDomain::Judiciary => "(judiciary OR court OR judge)".to_string(),
+        PolicyDomain::Technology => "(technology OR privacy OR innovation)".to_string(),
+        PolicyDomain::ForeignPolicy => "(diplomacy OR foreign-policy)".to_string(),
+        PolicyDomain::Labor => "(labor OR workers OR union)".to_string(),
+        PolicyDomain::Education => "(education OR schools)".to_string(),
         PolicyDomain::Other(value) => value.clone(),
     }
 }
@@ -465,7 +515,8 @@ mod tests {
     };
 
     use super::{
-        attach_public_signals_to_snapshot, build_public_signal_artifacts, parse_scope,
+        attach_public_signals_to_snapshot, build_public_signal_artifacts, domain_query,
+        object_query, parse_scope, senator_query,
     };
 
     #[test]
@@ -615,5 +666,40 @@ mod tests {
         let stance = crate::derive_stance_feature_driven(&senators[0], &objects[0], &contexts[0]).unwrap();
         assert!(stance.validate().is_ok());
         assert!(contexts[0].media_attention >= 0.45);
+    }
+
+    #[test]
+    fn query_builders_stay_within_supported_subset() {
+        let senator = crate::model::normalized_records::NormalizedSenatorRecord {
+            senator_id: "real_a0001".to_string(),
+            full_name: "Jeanne Shaheen".to_string(),
+            party: crate::model::identity::Party::Democrat,
+            state: "NH".to_string(),
+            class: crate::model::identity::SenateClass::II,
+            start_date: NaiveDate::from_ymd_opt(2025, 1, 3).unwrap(),
+            end_date: None,
+            source_member_id: "S000".to_string(),
+            as_of_date: NaiveDate::from_ymd_opt(2026, 3, 9).unwrap(),
+        };
+        assert_eq!(senator_query(&senator), "\"Jeanne Shaheen\"");
+
+        let object = crate::model::normalized_records::NormalizedLegislativeRecord {
+            object_id: "hjres11".to_string(),
+            title: "Proposing a balanced budget amendment to the Constitution".to_string(),
+            summary: "Test".to_string(),
+            introduced_date: NaiveDate::from_ymd_opt(2026, 3, 9).unwrap(),
+            sponsor: None,
+            object_type: crate::model::legislative::LegislativeObjectType::Bill,
+            policy_domain: PolicyDomain::BudgetTax,
+            latest_status_text: None,
+            current_stage: crate::model::legislative_context::ProceduralStage::Introduced,
+            origin_chamber: crate::model::legislative_context::Chamber::House,
+            budgetary_impact: crate::model::legislative::BudgetaryImpact::Moderate,
+            salience: 0.5,
+            controversy: 0.5,
+            as_of_date: NaiveDate::from_ymd_opt(2026, 3, 9).unwrap(),
+        };
+        assert_eq!(object_query(&object), "(\"balanced budget amendment\" OR hjres11)");
+        assert_eq!(domain_query(&PolicyDomain::BudgetTax), "(budget OR taxes OR spending)");
     }
 }

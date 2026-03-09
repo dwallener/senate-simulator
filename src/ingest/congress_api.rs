@@ -39,7 +39,7 @@ impl CongressApiClient {
         Ok(Self {
             client,
             api_key,
-            base_url: "https://api.data.gov/congress/v3".to_string(),
+            base_url: "https://api.congress.gov/v3".to_string(),
             pacing_delay: Duration::from_millis(150),
         })
     }

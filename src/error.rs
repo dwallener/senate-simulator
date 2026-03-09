@@ -20,6 +20,12 @@ pub enum SenateSimError {
     HttpClient(#[source] reqwest::Error),
     #[error("HTTP error from {url}: status {status}")]
     HttpStatus { url: String, status: reqwest::StatusCode },
+    #[error("unexpected response format from {url}: expected {expected}, body starts with {body_prefix}")]
+    UnexpectedResponseFormat {
+        url: String,
+        expected: &'static str,
+        body_prefix: String,
+    },
     #[error("XML parse error: {0}")]
     Xml(#[source] quick_xml::DeError),
     #[error("JSON serialization error: {0}")]

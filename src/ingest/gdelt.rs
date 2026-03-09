@@ -45,7 +45,49 @@ impl GdeltClient {
                 status: response.status(),
             });
         }
-        let payload = response.json::<Value>().map_err(SenateSimError::HttpClient)?;
+        let body = response.text().map_err(SenateSimError::HttpClient)?;
+        let payload = parse_gdelt_json_response(&url, &body)?;
         Ok((payload, url))
+    }
+}
+
+fn parse_gdelt_json_response(url: &str, body: &str) -> Result<Value, SenateSimError> {
+    let trimmed = body.trim_start();
+    if !(trimmed.starts_with('{') || trimmed.starts_with('[')) {
+        return Err(SenateSimError::UnexpectedResponseFormat {
+            url: url.to_string(),
+            expected: "JSON",
+            body_prefix: trimmed.chars().take(200).collect(),
+        });
+    }
+    serde_json::from_str(trimmed).map_err(|_| SenateSimError::UnexpectedResponseFormat {
+        url: url.to_string(),
+        expected: "JSON",
+        body_prefix: trimmed.chars().take(200).collect(),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_gdelt_json_response;
+
+    #[test]
+    fn rejects_html_error_pages() {
+        let error = parse_gdelt_json_response(
+            "https://example.test/gdelt",
+            "<html><head><title>Error</title></head><body>blocked</body></html>",
+        )
+        .unwrap_err();
+        assert!(format!("{error}").contains("unexpected response format"));
+    }
+
+    #[test]
+    fn parses_json_payloads() {
+        let payload = parse_gdelt_json_response(
+            "https://example.test/gdelt",
+            r#"{"articles":[{"title":"test"}]}"#,
+        )
+        .unwrap();
+        assert!(payload.get("articles").is_some());
     }
 }

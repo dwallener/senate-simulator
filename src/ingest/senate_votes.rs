@@ -44,7 +44,7 @@ impl SenateVoteClient {
     ) -> Result<(String, String), SenateSimError> {
         thread::sleep(self.pacing_delay);
         let url = format!(
-            "https://www.senate.gov/legislative/LIS/roll_call_votes/vote_menu_{congress}_{session}.xml"
+            "https://www.senate.gov/legislative/LIS/roll_call_lists/vote_menu_{congress}_{session}.xml"
         );
         let response = self
             .client
@@ -58,6 +58,7 @@ impl SenateVoteClient {
             });
         }
         let body = response.text().map_err(SenateSimError::HttpClient)?;
+        ensure_xml_response(&url, &body)?;
         Ok((body, url))
     }
 
@@ -83,6 +84,7 @@ impl SenateVoteClient {
             });
         }
         let body = response.text().map_err(SenateSimError::HttpClient)?;
+        ensure_xml_response(&url, &body)?;
         Ok((body, url))
     }
 }
@@ -93,8 +95,9 @@ pub fn parse_vote_index(
     session: u32,
 ) -> Result<Vec<SenateVoteReference>, SenateSimError> {
     let payload: VoteMenuXml = from_str(xml).map_err(SenateSimError::Xml)?;
+    let congress_year = payload.congress_year.unwrap_or_default();
     let mut entries = Vec::new();
-    for vote in payload.votes {
+    for vote in payload.votes.items {
         let vote_number = vote
             .vote_number
             .trim()
@@ -103,7 +106,7 @@ pub fn parse_vote_index(
                 field: "senate_vote_index.vote_number",
                 message: format!("invalid vote number {}", vote.vote_number),
             })?;
-        let vote_date = parse_vote_date(&vote.vote_date)?;
+        let vote_date = parse_vote_index_date(&vote.vote_date, congress_year)?;
         entries.push(SenateVoteReference {
             congress,
             session,
@@ -112,6 +115,17 @@ pub fn parse_vote_index(
         });
     }
     Ok(entries)
+}
+
+fn parse_vote_index_date(value: &str, congress_year: i32) -> Result<NaiveDate, SenateSimError> {
+    let trimmed = value.trim();
+    if let Ok(date) = NaiveDate::parse_from_str(trimmed, "%d-%b-%Y") {
+        return Ok(date);
+    }
+    if let Ok(partial) = NaiveDate::parse_from_str(&format!("{trimmed}-{congress_year}"), "%d-%b-%Y") {
+        return Ok(partial);
+    }
+    parse_vote_date(trimmed)
 }
 
 pub fn parse_vote_summary_to_raw(
@@ -185,6 +199,8 @@ fn parse_vote_date(value: &str) -> Result<NaiveDate, SenateSimError> {
         "%B %d, %Y, %I:%M %p",
         "%B %e, %Y, %I:%M %p",
         "%Y-%m-%d",
+        "%d-%b-%Y",
+        "%d-%b",
     ] {
         if let Ok(date) = NaiveDate::parse_from_str(value.trim(), format) {
             return Ok(date);
@@ -202,6 +218,22 @@ fn parse_vote_date(value: &str) -> Result<NaiveDate, SenateSimError> {
         field: "senate_vote_summary.vote_date",
         message: format!("invalid vote date {value}"),
     })
+}
+
+fn ensure_xml_response(url: &str, body: &str) -> Result<(), SenateSimError> {
+    let trimmed = body.trim_start();
+    if trimmed.starts_with("<?xml") || trimmed.starts_with('<') && !trimmed.starts_with("<!DOCTYPE html") && !trimmed.starts_with("<html") {
+        return Ok(());
+    }
+    Err(SenateSimError::UnexpectedResponseFormat {
+        url: url.to_string(),
+        expected: "XML",
+        body_prefix: trimmed.chars().take(80).collect(),
+    })
+}
+
+pub fn validate_xml_response(url: &str, body: &str) -> Result<(), SenateSimError> {
+    ensure_xml_response(url, body)
 }
 
 fn build_object_id(document_type: Option<&str>, document_number: Option<&str>) -> Option<String> {
@@ -317,8 +349,15 @@ fn build_member_name(member: &VoteMemberXml) -> String {
 
 #[derive(Debug, Deserialize)]
 struct VoteMenuXml {
+    congress_year: Option<i32>,
+    #[serde(default)]
+    votes: VoteMenuEntriesXml,
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct VoteMenuEntriesXml {
     #[serde(rename = "vote", default)]
-    votes: Vec<VoteMenuEntryXml>,
+    items: Vec<VoteMenuEntryXml>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -370,16 +409,19 @@ mod tests {
     #[test]
     fn parses_vote_index_fixture() {
         let xml = r#"
-            <roll_call_votes>
-              <vote>
-                <vote_number>1</vote_number>
-                <vote_date>January 15, 2026</vote_date>
-              </vote>
-              <vote>
-                <vote_number>2</vote_number>
-                <vote_date>January 20, 2026</vote_date>
-              </vote>
-            </roll_call_votes>
+            <vote_summary>
+              <congress_year>2026</congress_year>
+              <votes>
+                <vote>
+                  <vote_number>1</vote_number>
+                  <vote_date>15-Jan</vote_date>
+                </vote>
+                <vote>
+                  <vote_number>2</vote_number>
+                  <vote_date>20-Jan</vote_date>
+                </vote>
+              </votes>
+            </vote_summary>
         "#;
         let entries = parse_vote_index(xml, 119, 1).unwrap();
         assert_eq!(entries.len(), 2);

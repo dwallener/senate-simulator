@@ -14,7 +14,9 @@ use super::{
     congress_api::CongressApiClient,
     legislation::parse_raw_legislative_record_value,
     roster::parse_raw_roster_record_value,
-    senate_votes::{SenateVoteClient, parse_vote_index, parse_vote_summary_to_raw},
+    senate_votes::{
+        SenateVoteClient, parse_vote_index, parse_vote_summary_to_raw, validate_xml_response,
+    },
     sources::{fetched_at_for, raw_storage_dir, read_string, write_json_value, write_string},
 };
 
@@ -154,10 +156,13 @@ where
     F: FnOnce() -> Result<(String, String), SenateSimError>,
 {
     if config.use_cached_raw_if_present && path.exists() {
-        return Ok((read_string(path)?, path.to_string_lossy().to_string()));
+        let contents = read_string(path)?;
+        validate_xml_response(&path.to_string_lossy(), &contents)?;
+        return Ok((contents, path.to_string_lossy().to_string()));
     }
 
     let (payload, source_url) = fetcher()?;
+    validate_xml_response(&source_url, &payload)?;
     write_string(path, &payload)?;
     Ok((payload, source_url))
 }
@@ -364,6 +369,7 @@ fn parse_bill_identity(bill: &Value) -> Option<(String, String)> {
 fn member_party(member: &Value) -> String {
     member
         .pointer("/terms/item/0/party")
+        .or_else(|| member.pointer("/terms/item/0/partyName"))
         .or_else(|| member.get("party"))
         .and_then(Value::as_str)
         .unwrap_or("Unknown")
@@ -371,12 +377,79 @@ fn member_party(member: &Value) -> String {
 }
 
 fn member_state(member: &Value) -> String {
-    member
-        .pointer("/terms/item/0/state")
+    let state = member
+        .pointer("/terms/item/0/stateCode")
+        .or_else(|| member.pointer("/terms/item/0/state"))
         .or_else(|| member.get("state"))
+        .or_else(|| member.get("stateCode"))
         .and_then(Value::as_str)
         .unwrap_or("XX")
-        .to_string()
+        .to_string();
+
+    if state.len() == 2 {
+        state.to_ascii_uppercase()
+    } else {
+        state_name_to_code(&state).unwrap_or_else(|| "XX".to_string())
+    }
+}
+
+fn state_name_to_code(value: &str) -> Option<String> {
+    let normalized = value.trim().to_ascii_lowercase();
+    let code = match normalized.as_str() {
+        "alabama" => "AL",
+        "alaska" => "AK",
+        "arizona" => "AZ",
+        "arkansas" => "AR",
+        "california" => "CA",
+        "colorado" => "CO",
+        "connecticut" => "CT",
+        "delaware" => "DE",
+        "florida" => "FL",
+        "georgia" => "GA",
+        "hawaii" => "HI",
+        "idaho" => "ID",
+        "illinois" => "IL",
+        "indiana" => "IN",
+        "iowa" => "IA",
+        "kansas" => "KS",
+        "kentucky" => "KY",
+        "louisiana" => "LA",
+        "maine" => "ME",
+        "maryland" => "MD",
+        "massachusetts" => "MA",
+        "michigan" => "MI",
+        "minnesota" => "MN",
+        "mississippi" => "MS",
+        "missouri" => "MO",
+        "montana" => "MT",
+        "nebraska" => "NE",
+        "nevada" => "NV",
+        "new hampshire" => "NH",
+        "new jersey" => "NJ",
+        "new mexico" => "NM",
+        "new york" => "NY",
+        "north carolina" => "NC",
+        "north dakota" => "ND",
+        "ohio" => "OH",
+        "oklahoma" => "OK",
+        "oregon" => "OR",
+        "pennsylvania" => "PA",
+        "rhode island" => "RI",
+        "south carolina" => "SC",
+        "south dakota" => "SD",
+        "tennessee" => "TN",
+        "texas" => "TX",
+        "utah" => "UT",
+        "vermont" => "VT",
+        "virginia" => "VA",
+        "washington" => "WA",
+        "west virginia" => "WV",
+        "wisconsin" => "WI",
+        "wyoming" => "WY",
+        "district of columbia" => "DC",
+        _ => return None,
+    };
+    Some(code.to_string())
 }
 
 fn normalize_name(value: &str) -> String {
