@@ -1,0 +1,50 @@
+{
+  "identity": {
+    "senator_id": "sen_001",
+    "full_name": "Example Senator",
+    "party": "Independent",
+    "state": "OR",
+    "class": "II",
+    "start_date": "2023-01-03",
+    "end_date": "2029-01-03"
+  },
+  "structural": {
+    "ideology_score": 0.15,
+    "party_loyalty_baseline": 0.72,
+    "bipartisanship_baseline": 0.44,
+    "committee_assignments": [
+      "Budget",
+      "Energy and Natural Resources"
+    ],
+    "reelection_year": 2028,
+    "electoral_vulnerability": 0.31
+  },
+  "issue_preferences": {
+    "defense": 0.1,
+    "immigration": -0.2,
+    "energy_climate": 0.7,
+    "labor": 0.4,
+    "healthcare": 0.5,
+    "tax_spending": -0.1,
+    "judiciary": 0.2,
+    "trade": 0.0,
+    "tech_privacy": 0.6,
+    "foreign_policy": 0.25
+  },
+  "procedural": {
+    "cloture_support_baseline": 0.66,
+    "motion_to_proceed_baseline": 0.7,
+    "uc_objection_tendency": 0.18,
+    "leadership_deference": 0.54,
+    "amendment_openness": 0.77,
+    "attendance_reliability": 0.95
+  },
+  "dynamic_state": {
+    "current_public_position": "negotiating",
+    "current_substantive_support": 0.58,
+    "current_procedural_support": 0.63,
+    "current_negotiability": 0.81,
+    "current_party_pressure": 0.4,
+    "current_issue_salience_in_state": 0.67
+  }
+}

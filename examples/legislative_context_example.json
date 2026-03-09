@@ -1,0 +1,15 @@
+{
+  "congress_number": 119,
+  "session": "First",
+  "current_chamber": "Senate",
+  "procedural_stage": "ClotureFiled",
+  "majority_party": "Democrat",
+  "minority_party": "Republican",
+  "president_party": "Democrat",
+  "days_until_election": 120,
+  "days_until_deadline": 18,
+  "under_unanimous_consent": false,
+  "under_reconciliation": false,
+  "leadership_priority": 0.82,
+  "media_attention": 0.67
+}

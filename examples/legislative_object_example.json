@@ -1,0 +1,19 @@
+{
+  "object_id": "obj_001",
+  "title": "Clean Grid Permitting Reform Act",
+  "object_type": "Bill",
+  "policy_domain": "EnergyClimate",
+  "summary": "A fictional bill to accelerate transmission siting, streamline environmental review, and pair permitting reform with workforce and reliability safeguards.",
+  "text_embedding_placeholder": "embedding_v1_placeholder",
+  "sponsor": "sen_014",
+  "cosponsors": [
+    "sen_021",
+    "sen_044"
+  ],
+  "origin_chamber": "Senate",
+  "introduced_date": "2026-02-11",
+  "current_version_label": "Reported Substitute",
+  "budgetary_impact": "Moderate",
+  "salience": 0.78,
+  "controversy": 0.63
+}
