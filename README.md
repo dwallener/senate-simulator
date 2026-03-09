@@ -436,33 +436,3 @@ A senator object might look conceptually like this:
 
 This is only illustrative. The exact schema can change.
 
-Non-goals for this step
-
-This step does not attempt to:
-	•	predict chamber outcomes,
-	•	simulate floor procedure,
-	•	parse bill text,
-	•	build a training pipeline,
-	•	infer whip counts,
-	•	or reproduce roll-call history.
-
-Those come later.
-
-Right now, the goal is simpler:
-
-Define the unit of political behavior the rest of the system will operate on.
-
-⸻
-
-Next step
-
-Once the senator definition is stable, the next logical step is:
-
-Define the latent state space for a senator facing a specific legislative object.
-
-In plain English:
-
-When a senator encounters a bill, amendment, motion, or procedural move, what internal state are we trying to estimate?
-
-That is the bridge between static senator profiles and actual simulation.
-
