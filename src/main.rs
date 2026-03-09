@@ -1,10 +1,16 @@
-use senate_simulator::{BacktestResult, DataSnapshot, run_backtest, run_daily_ingestion};
+use senate_simulator::{
+    AlignmentReport, BacktestResult, DataSnapshot, EvaluationSummary,
+    build_evaluation_artifacts_for_snapshot_date, evaluate_from_snapshot_date, run_backtest,
+    run_daily_ingestion,
+};
 
 fn main() {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     let result = match args.first().map(String::as_str) {
         Some("ingest") => run_ingest_command(&args[1..]),
         Some("backtest") => run_backtest_command(&args[1..]),
+        Some("eval-build") => run_eval_build_command(&args[1..]),
+        Some("eval-run") => run_eval_run_command(&args[1..]),
         _ => run_default_demo(),
     };
 
@@ -38,6 +44,33 @@ fn run_default_demo() -> Result<(), senate_simulator::SenateSimError> {
 
     let result = run_backtest(run_date, "s_2100")?;
     print_backtest_summary(&result);
+
+    let artifacts = build_evaluation_artifacts_for_snapshot_date(run_date)?;
+    print_alignment_summary(&artifacts.alignment_report);
+
+    let summary = evaluate_from_snapshot_date(run_date)?;
+    print_evaluation_summary(&summary);
+    Ok(())
+}
+
+fn run_eval_build_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let snapshot_date = parse_date(date)?;
+    let artifacts = build_evaluation_artifacts_for_snapshot_date(snapshot_date)?;
+    print_alignment_summary(&artifacts.alignment_report);
+    println!(
+        "  persisted examples={} trajectories={}",
+        artifacts.examples.len(),
+        artifacts.trajectories.len()
+    );
+    Ok(())
+}
+
+fn run_eval_run_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let snapshot_date = parse_date(date)?;
+    let summary = evaluate_from_snapshot_date(snapshot_date)?;
+    print_evaluation_summary(&summary);
     Ok(())
 }
 
@@ -85,6 +118,34 @@ fn print_backtest_summary(result: &BacktestResult) {
         result.prediction_confidence.unwrap_or(0.0)
     );
     for note in &result.notes {
+        println!("  - {note}");
+    }
+}
+
+fn print_alignment_summary(report: &AlignmentReport) {
+    println!(
+        "Evaluation build {}: objects={}, examples={}, ambiguous_actions={}, unaligned_consequential={}",
+        report.snapshot_date,
+        report.objects_processed,
+        report.examples_generated,
+        report.ambiguous_actions,
+        report.unaligned_consequential_actions
+    );
+    for note in &report.notes {
+        println!("  - {note}");
+    }
+}
+
+fn print_evaluation_summary(summary: &EvaluationSummary) {
+    println!(
+        "Evaluation summary: total={}, top1={:.2}, topk={:.2}, trajectory_prefix={:.2}, unscorable={}",
+        summary.total_examples,
+        summary.top_1_next_event_accuracy,
+        summary.top_k_next_event_accuracy,
+        summary.trajectory_prefix_match_rate,
+        summary.unscorable_examples
+    );
+    for note in &summary.notes {
         println!("  - {note}");
     }
 }

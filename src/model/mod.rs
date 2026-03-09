@@ -1,7 +1,11 @@
 pub mod backtest_result;
+pub mod actual_trajectory;
+pub mod action_alignment;
 pub mod data_snapshot;
 pub mod dynamic_state;
+pub mod evaluation_example;
 pub mod floor_action_assessment;
+pub mod historical_timeline;
 pub mod identity;
 pub mod issue_preferences;
 pub mod legislative;

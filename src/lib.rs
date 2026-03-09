@@ -2,6 +2,7 @@ pub mod analysis;
 pub mod backtest;
 pub mod derive;
 pub mod error;
+pub mod eval;
 pub mod ingest;
 pub mod io;
 pub mod model;
@@ -14,14 +15,26 @@ pub use analysis::transition::predict_next_event;
 pub use backtest::runner::run_backtest;
 pub use derive::stance::derive_stance;
 pub use error::SenateSimError;
+pub use eval::align::{align_action_to_senate_event, is_consequential_action};
+pub use eval::examples::{
+    build_evaluation_artifacts, build_evaluation_artifacts_for_snapshot_date,
+    generate_actual_trajectory, generate_next_event_examples, load_evaluation_artifacts,
+    persist_evaluation_artifacts,
+};
+pub use eval::runner::{evaluate_from_snapshot_date, evaluate_snapshot_examples};
+pub use eval::timeline::build_historical_timelines;
 pub use ingest::{
     run_daily_ingestion, run_daily_ingestion_with_roots, snapshot_to_contexts,
     snapshot_to_legislative_objects, snapshot_to_senators,
 };
+pub use model::action_alignment::AlignmentReport;
+pub use model::actual_trajectory::{ActualTrajectory, ActualTrajectoryEvent};
 pub use model::backtest_result::BacktestResult;
 pub use model::data_snapshot::{DataSnapshot, SourceManifest};
 pub use model::dynamic_state::PublicPosition;
+pub use model::evaluation_example::{EvaluationExample, EvaluationSummary};
 pub use model::floor_action_assessment::{FloorAction, FloorActionAssessment};
+pub use model::historical_timeline::{HistoricalActionEvent, HistoricalTimeline};
 pub use model::identity::{Party, SenateClass};
 pub use model::legislative::{
     BudgetaryImpact, LegislativeObject, LegislativeObjectType, PolicyDomain,
