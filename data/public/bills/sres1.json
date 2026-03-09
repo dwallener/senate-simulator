@@ -2,11 +2,11 @@
   "schema_version": 1,
   "snapshot_date": "2026-03-09",
   "generated_at": "2026-03-09T22:16:06.848126+00:00",
-  "object_id": "hr144",
-  "label": "Tennessee Valley Authority Salary Transparency Act",
-  "title": "Tennessee Valley Authority Salary Transparency Act",
+  "object_id": "sres1",
+  "label": "sres1",
+  "title": "A resolution establishing a Committee to Inform the President of the United States that a quorum of each House is assembled.",
   "summary": "Summary unavailable in source payload",
-  "stage": "InCommittee",
+  "stage": "AmendmentPending",
   "support_count": 0,
   "lean_support_count": 53,
   "undecided_count": 2,
@@ -14,99 +14,99 @@
   "majority_viable": true,
   "cloture_viable": false,
   "expected_present_count": 94,
-  "coalition_stability": 0.29051036,
-  "filibuster_risk": 0.3369382,
-  "predicted_floor_action": "LikelyNegotiation",
-  "floor_action_confidence": 0.19619185,
+  "coalition_stability": 0.27391475,
+  "filibuster_risk": 0.28545454,
+  "predicted_floor_action": "LikelyAmendmentFight",
+  "floor_action_confidence": 0.19320464,
   "support_margin_estimate": 5,
   "cloture_gap_estimate": -8,
-  "predicted_next_event": "NoMeaningfulMovement",
-  "next_event_score": 0.6339387,
-  "next_event_confidence": 0.4763849,
-  "candidate_priority_score": -2,
-  "likely_to_move_score": 0.0,
-  "likely_to_get_moving_score": 0.44823018,
+  "predicted_next_event": "ClotureFiled",
+  "next_event_score": 0.6588,
+  "next_event_confidence": 0.5113834,
+  "candidate_priority_score": 6,
+  "likely_to_move_score": 0.14531869,
+  "likely_to_get_moving_score": 0.294208,
   "inclusion_reasons": [
-    "manual watchlist"
+    "stage is OnCalendar or later"
   ],
   "days_since_latest_action": null,
   "alternatives": [
     {
       "event": "NegotiationIntensifies",
-      "score": 0.6129992,
+      "score": 0.61432683,
       "reason": "near-threshold numbers and pivotal senators keep bargaining active"
     },
     {
-      "event": "MotionToProceedAttempted",
-      "score": 0.5858797,
-      "reason": "leadership has enough incentive to test floor access"
+      "event": "AmendmentFightBegins",
+      "score": 0.52857363,
+      "reason": "fragile coalition and many pivots make amendment conflict likely"
     },
     {
-      "event": "LeadershipSignalsAction",
-      "score": 0.4908,
-      "reason": "leadership pressure is building even without a clean formal path"
+      "event": "ProceduralBlock",
+      "score": 0.50763935,
+      "reason": "rigid blockers and procedural weakness point toward obstruction"
     }
   ],
   "pivots": [
-    {
-      "senator_id": "real_t000250",
-      "senator_name": "Thune, John",
-      "state": "SD",
-      "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
-      "procedural_posture": "Unclear",
-      "substantive_support": 0.61175066,
-      "procedural_support": 0.64786345,
-      "negotiability": 0.14874214
-    },
-    {
-      "senator_id": "real_t000278",
-      "senator_name": "Tuberville, Tommy",
-      "state": "AL",
-      "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
-      "procedural_posture": "Unclear",
-      "substantive_support": 0.6146368,
-      "procedural_support": 0.6765105,
-      "negotiability": 0.10936149
-    },
-    {
-      "senator_id": "real_l000577",
-      "senator_name": "Lee, Mike",
-      "state": "UT",
-      "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
-      "procedural_posture": "Unclear",
-      "substantive_support": 0.6153359,
-      "procedural_support": 0.68134147,
-      "negotiability": 0.108744495
-    },
     {
       "senator_id": "real_p000603",
       "senator_name": "Paul, Rand",
       "state": "KY",
       "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
+      "reason": "substantive support exists, but procedural hesitation makes this senator pivotal",
       "stance_label": "LeanSupport",
       "procedural_posture": "Unclear",
       "substantive_support": 0.602201,
-      "procedural_support": 0.7121123,
+      "procedural_support": 0.53479224,
       "negotiability": 0.1466147
     },
     {
-      "senator_id": "real_j000293",
-      "senator_name": "Johnson, Ron",
-      "state": "WI",
+      "senator_id": "real_c001035",
+      "senator_name": "Collins, Susan M.",
+      "state": "ME",
       "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
+      "reason": "substantive support exists, but procedural hesitation makes this senator pivotal",
       "stance_label": "LeanSupport",
       "procedural_posture": "Unclear",
-      "substantive_support": 0.6153359,
-      "procedural_support": 0.6846748,
-      "negotiability": 0.108744495
+      "substantive_support": 0.6201395,
+      "procedural_support": 0.55308867,
+      "negotiability": 0.1221314
+    },
+    {
+      "senator_id": "real_t000250",
+      "senator_name": "Thune, John",
+      "state": "SD",
+      "party": "Republican",
+      "reason": "substantive support exists, but procedural hesitation makes this senator pivotal",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.61175066,
+      "procedural_support": 0.52737683,
+      "negotiability": 0.14874214
+    },
+    {
+      "senator_id": "real_t000476",
+      "senator_name": "Tillis, Thomas",
+      "state": "NC",
+      "party": "Republican",
+      "reason": "substantive support exists, but procedural hesitation makes this senator pivotal",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.621088,
+      "procedural_support": 0.55316097,
+      "negotiability": 0.102267645
+    },
+    {
+      "senator_id": "real_s001217",
+      "senator_name": "Scott, Rick",
+      "state": "FL",
+      "party": "Republican",
+      "reason": "substantive support exists, but procedural hesitation makes this senator pivotal",
+      "stance_label": "LeanSupport",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.6162562,
+      "procedural_support": 0.5372337,
+      "negotiability": 0.10770821
     }
   ],
   "blockers": [
@@ -151,23 +151,23 @@
       "rigidity": 0.8597406
     },
     {
-      "senator_id": "real_v000128",
-      "senator_name": "Van Hollen, Chris",
+      "senator_id": "real_a000382",
+      "senator_name": "Alsobrooks, Angela D.",
       "state": "MD",
       "party": "Democrat",
       "reason": "low procedural support and high rigidity mark a likely blocker",
-      "public_position": "Mixed",
+      "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8208933
+      "rigidity": 0.8597406
     }
   ],
   "defectors": [],
   "rollout_steps": [
     {
       "step_index": 0,
-      "starting_stage": "InCommittee",
-      "predicted_event": "NoMeaningfulMovement",
-      "confidence": 0.4763849,
+      "starting_stage": "AmendmentPending",
+      "predicted_event": "ClotureFiled",
+      "confidence": 0.5113834,
       "support_count": 0,
       "lean_support_count": 53,
       "undecided_count": 2,
@@ -177,9 +177,21 @@
     },
     {
       "step_index": 1,
-      "starting_stage": "InCommittee",
-      "predicted_event": "NoMeaningfulMovement",
-      "confidence": 0.5084015,
+      "starting_stage": "ClotureFiled",
+      "predicted_event": "ClotureVoteScheduled",
+      "confidence": 0.4437281,
+      "support_count": 0,
+      "lean_support_count": 53,
+      "undecided_count": 2,
+      "oppose_count": 0,
+      "simple_majority_viable": true,
+      "cloture_viable": false
+    },
+    {
+      "step_index": 2,
+      "starting_stage": "ClotureVote",
+      "predicted_event": "NegotiationIntensifies",
+      "confidence": 0.49547732,
       "support_count": 0,
       "lean_support_count": 53,
       "undecided_count": 2,
@@ -190,13 +202,13 @@
   ],
   "top_findings": [
     "current support coalition is 53 likely/lean supporters out of 94 expected present",
-    "simple majority is viable at an estimated 54.7 votes against a 48-vote threshold",
-    "cloture remains short at an estimated 30.8 procedural votes",
+    "simple majority is viable at an estimated 54.8 votes against a 48-vote threshold",
+    "cloture remains short at an estimated 30.4 procedural votes",
     "coalition stability is weak and vulnerable to movement",
     "5 likely procedural blockers materially raise filibuster risk"
   ],
   "top_reasons": [
-    "weak coalition pressure and low immediate urgency favor inaction",
+    "leadership pressure and blocker presence favor forcing the process",
     "simple-majority math currently favors action",
     "procedural coalition is weak enough to constrain floor movement",
     "deadline and media pressure reduce the odds of passive drift",
@@ -205,5 +217,5 @@
     "limited leadership priority reduces pressure for immediate floor action",
     "fragile coalition dynamics point toward bargaining rather than clean passage"
   ],
-  "termination_reason": "NoMeaningfulFurtherMovement"
+  "termination_reason": "ReachedHorizon"
 }

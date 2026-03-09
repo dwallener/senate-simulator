@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-03-09",
+  "generated_at": "2026-03-09T22:16:06.848126+00:00",
+  "object_id": "sres7",
+  "label": "sres7",
+  "title": "A resolution fixing the hour of daily meeting of the Senate.",
+  "summary": "Summary unavailable in source payload",
+  "stage": "AmendmentPending",
+  "support_count": 0,
+  "lean_support_count": 0,
+  "undecided_count": 100,
+  "oppose_count": 0,
+  "majority_viable": false,
+  "cloture_viable": false,
+  "expected_present_count": 94,
+  "coalition_stability": 0.0,
+  "filibuster_risk": 0.3788458,
+  "predicted_floor_action": "LikelyAmendmentFight",
+  "floor_action_confidence": 0.14749998,
+  "support_margin_estimate": -48,
+  "cloture_gap_estimate": 40,
+  "predicted_next_event": "NegotiationIntensifies",
+  "next_event_score": 0.94984,
+  "next_event_confidence": 0.7357441,
+  "candidate_priority_score": 7,
+  "likely_to_move_score": 0.20983395,
+  "likely_to_get_moving_score": 0.3947744,
+  "inclusion_reasons": [
+    "stage is OnCalendar or later"
+  ],
+  "days_since_latest_action": null,
+  "alternatives": [
+    {
+      "event": "AmendmentFightBegins",
+      "score": 0.68999994,
+      "reason": "fragile coalition and many pivots make amendment conflict likely"
+    },
+    {
+      "event": "ClotureFiled",
+      "score": 0.6538,
+      "reason": "leadership pressure and blocker presence favor forcing the process"
+    },
+    {
+      "event": "ProceduralBlock",
+      "score": 0.550923,
+      "reason": "rigid blockers and procedural weakness point toward obstruction"
+    }
+  ],
+  "pivots": [
+    {
+      "senator_id": "real_h001076",
+      "senator_name": "Hassan, Margaret Wood",
+      "state": "NH",
+      "party": "Democrat",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.5129339,
+      "procedural_support": 0.5326229,
+      "negotiability": 0.20100439
+    },
+    {
+      "senator_id": "real_w000802",
+      "senator_name": "Whitehouse, Sheldon",
+      "state": "RI",
+      "party": "Democrat",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.513842,
+      "procedural_support": 0.5311001,
+      "negotiability": 0.1971564
+    },
+    {
+      "senator_id": "real_k000377",
+      "senator_name": "Kelly, Mark",
+      "state": "AZ",
+      "party": "Democrat",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.51056993,
+      "procedural_support": 0.5210388,
+      "negotiability": 0.20919436
+    },
+    {
+      "senator_id": "real_k000384",
+      "senator_name": "Kaine, Tim",
+      "state": "VA",
+      "party": "Democrat",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.51056993,
+      "procedural_support": 0.5210388,
+      "negotiability": 0.20919436
+    },
+    {
+      "senator_id": "real_k000367",
+      "senator_name": "Klobuchar, Amy",
+      "state": "MN",
+      "party": "Democrat",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.5167016,
+      "procedural_support": 0.5309769,
+      "negotiability": 0.1852032
+    }
+  ],
+  "blockers": [],
+  "defectors": [],
+  "rollout_steps": [
+    {
+      "step_index": 0,
+      "starting_stage": "AmendmentPending",
+      "predicted_event": "NegotiationIntensifies",
+      "confidence": 0.7357441,
+      "support_count": 0,
+      "lean_support_count": 0,
+      "undecided_count": 100,
+      "oppose_count": 0,
+      "simple_majority_viable": false,
+      "cloture_viable": false
+    },
+    {
+      "step_index": 1,
+      "starting_stage": "AmendmentPending",
+      "predicted_event": "NegotiationIntensifies",
+      "confidence": 0.7426562,
+      "support_count": 0,
+      "lean_support_count": 0,
+      "undecided_count": 100,
+      "oppose_count": 0,
+      "simple_majority_viable": false,
+      "cloture_viable": false
+    }
+  ],
+  "top_findings": [
+    "current support coalition is 0 likely/lean supporters out of 94 expected present",
+    "simple majority is not yet viable; estimated support is 31.3 against a 48-vote threshold",
+    "cloture remains short at an estimated 29.8 procedural votes",
+    "coalition stability is weak and vulnerable to movement"
+  ],
+  "top_reasons": [
+    "near-threshold numbers and pivotal senators keep bargaining active",
+    "simple-majority support is not yet locked in",
+    "procedural coalition is weak enough to constrain floor movement",
+    "deadline and media pressure reduce the odds of passive drift",
+    "simple majority coalition does not yet exist",
+    "cloture path remains below the 60-vote threshold",
+    "limited leadership priority reduces pressure for immediate floor action",
+    "fragile coalition dynamics point toward bargaining rather than clean passage"
+  ],
+  "termination_reason": "LoopDetected"
+}

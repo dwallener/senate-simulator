@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-03-09",
+  "generated_at": "2026-03-09T22:16:06.848126+00:00",
+  "object_id": "hr23",
+  "label": "hr23",
+  "title": "Illegitimate Court Counteraction Act",
+  "summary": "Summary unavailable in source payload",
+  "stage": "MotionToProceed",
+  "support_count": 0,
+  "lean_support_count": 52,
+  "undecided_count": 1,
+  "oppose_count": 47,
+  "majority_viable": true,
+  "cloture_viable": false,
+  "expected_present_count": 94,
+  "coalition_stability": 0.2857254,
+  "filibuster_risk": 0.12307185,
+  "predicted_floor_action": "LikelyStall",
+  "floor_action_confidence": 0.3039145,
+  "support_margin_estimate": 4,
+  "cloture_gap_estimate": -10,
+  "predicted_next_event": "MotionToProceedAttempted",
+  "next_event_score": 0.79534256,
+  "next_event_confidence": 0.740173,
+  "candidate_priority_score": 5,
+  "likely_to_move_score": 0.055568695,
+  "likely_to_get_moving_score": 0.37005487,
+  "inclusion_reasons": [
+    "stage is OnCalendar or later"
+  ],
+  "days_since_latest_action": null,
+  "alternatives": [
+    {
+      "event": "NegotiationIntensifies",
+      "score": 0.610182,
+      "reason": "near-threshold numbers and pivotal senators keep bargaining active"
+    },
+    {
+      "event": "DebateBegins",
+      "score": 0.538716,
+      "reason": "procedural conditions are good enough to move into floor debate"
+    },
+    {
+      "event": "ProceduralBlock",
+      "score": 0.4672502,
+      "reason": "rigid blockers and procedural weakness point toward obstruction"
+    },
+    {
+      "event": "NoMeaningfulMovement",
+      "score": 0.45451292,
+      "reason": "weak coalition pressure and low immediate urgency favor inaction"
+    }
+  ],
+  "pivots": [
+    {
+      "senator_id": "real_m000355",
+      "senator_name": "McConnell, Mitch",
+      "state": "KY",
+      "party": "Republican",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
+      "procedural_posture": "SupportDebate",
+      "substantive_support": 0.5338402,
+      "procedural_support": 0.73962057,
+      "negotiability": 0.11067077
+    },
+    {
+      "senator_id": "real_l000570",
+      "senator_name": "Luján, Ben Ray",
+      "state": "NM",
+      "party": "Democrat",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
+      "stance_label": "LeanOppose",
+      "procedural_posture": "SupportDebate",
+      "substantive_support": 0.35650498,
+      "procedural_support": 0.71622294,
+      "negotiability": 0.1644486
+    },
+    {
+      "senator_id": "real_h001076",
+      "senator_name": "Hassan, Margaret Wood",
+      "state": "NH",
+      "party": "Democrat",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
+      "stance_label": "LeanOppose",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.2804339,
+      "procedural_support": 0.44853625,
+      "negotiability": 0.16794324
+    },
+    {
+      "senator_id": "real_w000802",
+      "senator_name": "Whitehouse, Sheldon",
+      "state": "RI",
+      "party": "Democrat",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
+      "stance_label": "LeanOppose",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.28134197,
+      "procedural_support": 0.4470134,
+      "negotiability": 0.16438583
+    },
+    {
+      "senator_id": "real_d000563",
+      "senator_name": "Durbin, Richard J.",
+      "state": "IL",
+      "party": "Democrat",
+      "reason": "marginal support and meaningful negotiability make this senator pivotal",
+      "stance_label": "LeanOppose",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.2847706,
+      "procedural_support": 0.44616398,
+      "negotiability": 0.15118036
+    }
+  ],
+  "blockers": [
+    {
+      "senator_id": "real_v000128",
+      "senator_name": "Van Hollen, Chris",
+      "state": "MD",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Mixed",
+      "defection_probability": 0.0,
+      "rigidity": 0.8268453
+    },
+    {
+      "senator_id": "real_m001169",
+      "senator_name": "Murphy, Christopher",
+      "state": "CT",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Mixed",
+      "defection_probability": 0.0,
+      "rigidity": 0.82522666
+    },
+    {
+      "senator_id": "real_b001288",
+      "senator_name": "Booker, Cory A.",
+      "state": "NJ",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Mixed",
+      "defection_probability": 0.0,
+      "rigidity": 0.8656926
+    },
+    {
+      "senator_id": "real_s001203",
+      "senator_name": "Smith, Tina",
+      "state": "MN",
+      "party": "Democrat",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Mixed",
+      "defection_probability": 0.0,
+      "rigidity": 0.8656926
+    },
+    {
+      "senator_id": "real_j000293",
+      "senator_name": "Johnson, Ron",
+      "state": "WI",
+      "party": "Republican",
+      "reason": "low procedural support and high rigidity mark a likely blocker",
+      "public_position": "Negotiating",
+      "defection_probability": 0.0,
+      "rigidity": 0.8254534
+    }
+  ],
+  "defectors": [],
+  "rollout_steps": [
+    {
+      "step_index": 0,
+      "starting_stage": "MotionToProceed",
+      "predicted_event": "MotionToProceedAttempted",
+      "confidence": 0.740173,
+      "support_count": 0,
+      "lean_support_count": 52,
+      "undecided_count": 1,
+      "oppose_count": 39,
+      "simple_majority_viable": true,
+      "cloture_viable": false
+    },
+    {
+      "step_index": 1,
+      "starting_stage": "MotionToProceed",
+      "predicted_event": "MotionToProceedAttempted",
+      "confidence": 0.75802404,
+      "support_count": 0,
+      "lean_support_count": 52,
+      "undecided_count": 1,
+      "oppose_count": 39,
+      "simple_majority_viable": true,
+      "cloture_viable": false
+    }
+  ],
+  "top_findings": [
+    "current support coalition is 52 likely/lean supporters out of 94 expected present",
+    "simple majority is viable at an estimated 52.7 votes against a 48-vote threshold",
+    "cloture remains short at an estimated 48.5 procedural votes",
+    "coalition stability is weak and vulnerable to movement",
+    "5 likely procedural blockers materially raise filibuster risk"
+  ],
+  "top_reasons": [
+    "leadership has enough incentive to test floor access",
+    "simple-majority math currently favors action",
+    "procedural coalition is weak enough to constrain floor movement",
+    "deadline and media pressure reduce the odds of passive drift",
+    "simple majority coalition exists in the current chamber snapshot",
+    "cloture path remains below the 60-vote threshold",
+    "limited leadership priority reduces pressure for immediate floor action",
+    "fragile coalition dynamics point toward bargaining rather than clean passage"
+  ],
+  "termination_reason": "LoopDetected"
+}

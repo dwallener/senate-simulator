@@ -2,11 +2,11 @@
   "schema_version": 1,
   "snapshot_date": "2026-03-09",
   "generated_at": "2026-03-09T22:16:06.848126+00:00",
-  "object_id": "hr144",
-  "label": "Tennessee Valley Authority Salary Transparency Act",
-  "title": "Tennessee Valley Authority Salary Transparency Act",
+  "object_id": "hr38",
+  "label": "hr38",
+  "title": "Constitutional Concealed Carry Reciprocity Act of 2025",
   "summary": "Summary unavailable in source payload",
-  "stage": "InCommittee",
+  "stage": "OnCalendar",
   "support_count": 0,
   "lean_support_count": 53,
   "undecided_count": 2,
@@ -23,11 +23,11 @@
   "predicted_next_event": "NoMeaningfulMovement",
   "next_event_score": 0.6339387,
   "next_event_confidence": 0.4763849,
-  "candidate_priority_score": -2,
-  "likely_to_move_score": 0.0,
-  "likely_to_get_moving_score": 0.44823018,
+  "candidate_priority_score": 0,
+  "likely_to_move_score": 0.06954098,
+  "likely_to_get_moving_score": 0.3822302,
   "inclusion_reasons": [
-    "manual watchlist"
+    "stage is OnCalendar or later"
   ],
   "days_since_latest_action": null,
   "alternatives": [
@@ -165,7 +165,7 @@
   "rollout_steps": [
     {
       "step_index": 0,
-      "starting_stage": "InCommittee",
+      "starting_stage": "OnCalendar",
       "predicted_event": "NoMeaningfulMovement",
       "confidence": 0.4763849,
       "support_count": 0,
@@ -177,7 +177,7 @@
     },
     {
       "step_index": 1,
-      "starting_stage": "InCommittee",
+      "starting_stage": "OnCalendar",
       "predicted_event": "NoMeaningfulMovement",
       "confidence": 0.5084015,
       "support_count": 0,

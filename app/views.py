@@ -31,8 +31,21 @@ def render_overview(bundle: dict[str, Any]) -> str | None:
         st.warning("No tracked bill exports were found in the public artifact bundle.")
         return None
 
-    selected_object_id = st.selectbox(
-        "Tracked bill",
+    list_cols = st.columns(2)
+    selected_object_id = _render_ranked_list(
+        list_cols[0],
+        "Most Likely To Move",
+        summary.get("most_likely_to_move", []),
+    )
+    selected_object_id = selected_object_id or _render_ranked_list(
+        list_cols[1],
+        "Most Likely To Get Moving",
+        summary.get("most_likely_to_get_moving", []),
+    )
+
+    st.subheader("Exported Senate Bills")
+    selected_object_id = selected_object_id or st.selectbox(
+        "Browse exported bills",
         options=[row["object_id"] for row in rows],
         format_func=lambda object_id: _bill_label(object_id, tracked, rows),
     )
@@ -42,6 +55,7 @@ def render_overview(bundle: dict[str, Any]) -> str | None:
             "Object ID": row["object_id"],
             "Title": row["title"],
             "Stage": stage_badge(row["stage"]),
+            "Priority": row.get("candidate_priority_score", 0),
             "Support": row["support_count"],
             "Lean Support": row["lean_support_count"],
             "Undecided": row["undecided_count"],
@@ -49,6 +63,7 @@ def render_overview(bundle: dict[str, Any]) -> str | None:
             "Majority": yes_no_label(row["majority_viable"]),
             "Cloture": yes_no_label(row["cloture_viable"]),
             "Next Event": row["predicted_next_event"],
+            "Event Score": f"{row.get('next_event_score', 0.0):.2f}",
             "Confidence": compact_percent(row["next_event_confidence"]),
         }
         for row in rows
@@ -134,3 +149,34 @@ def _bill_label(object_id: str, tracked: list[dict[str, Any]], rows: list[dict[s
     )
     row_title = next((row.get("title") for row in rows if row.get("object_id") == object_id), object_id)
     return f"{object_id} — {tracked_label or row_title}"
+
+
+def _render_ranked_list(column: Any, title: str, entries: list[dict[str, Any]]) -> str | None:
+    if not entries:
+        return None
+
+    selected = None
+    with column:
+        st.subheader(title)
+        for index, entry in enumerate(entries[:10], start=1):
+            with st.container(border=True):
+                st.markdown(
+                    f"**{index}. {entry['object_id']} — {entry['title']}**"
+                )
+                st.caption(
+                    f"{stage_badge(entry['stage'])} | "
+                    f"next: {entry['predicted_next_event']} "
+                    f"({entry['next_event_score']:.2f}, conf {entry['next_event_confidence']:.2f})"
+                )
+                st.write(entry.get("summary_blurb", ""))
+                st.write(
+                    f"Majority {yes_no_label(entry['majority_viable'])} | "
+                    f"Cloture {yes_no_label(entry['cloture_viable'])}"
+                )
+                if st.button(
+                    f"Open {entry['object_id']}",
+                    key=f"{title}-{entry['object_id']}",
+                    use_container_width=True,
+                ):
+                    selected = entry["object_id"]
+    return selected

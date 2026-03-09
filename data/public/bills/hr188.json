@@ -2,49 +2,49 @@
   "schema_version": 1,
   "snapshot_date": "2026-03-09",
   "generated_at": "2026-03-09T22:16:06.848126+00:00",
-  "object_id": "hr144",
-  "label": "Tennessee Valley Authority Salary Transparency Act",
-  "title": "Tennessee Valley Authority Salary Transparency Act",
+  "object_id": "hr188",
+  "label": "hr188",
+  "title": "Amtrak Transparency and Accountability for Passengers and Taxpayers Act",
   "summary": "Summary unavailable in source payload",
-  "stage": "InCommittee",
+  "stage": "OnCalendar",
   "support_count": 0,
-  "lean_support_count": 53,
-  "undecided_count": 2,
-  "oppose_count": 45,
-  "majority_viable": true,
+  "lean_support_count": 0,
+  "undecided_count": 98,
+  "oppose_count": 2,
+  "majority_viable": false,
   "cloture_viable": false,
   "expected_present_count": 94,
-  "coalition_stability": 0.29051036,
-  "filibuster_risk": 0.3369382,
-  "predicted_floor_action": "LikelyNegotiation",
-  "floor_action_confidence": 0.19619185,
-  "support_margin_estimate": 5,
-  "cloture_gap_estimate": -8,
-  "predicted_next_event": "NoMeaningfulMovement",
-  "next_event_score": 0.6339387,
-  "next_event_confidence": 0.4763849,
-  "candidate_priority_score": -2,
-  "likely_to_move_score": 0.0,
-  "likely_to_get_moving_score": 0.44823018,
+  "coalition_stability": 0.0,
+  "filibuster_risk": 0.4326049,
+  "predicted_floor_action": "LikelyStall",
+  "floor_action_confidence": 0.30359995,
+  "support_margin_estimate": -48,
+  "cloture_gap_estimate": 35,
+  "predicted_next_event": "NegotiationIntensifies",
+  "next_event_score": 0.94344,
+  "next_event_confidence": 0.571024,
+  "candidate_priority_score": 2,
+  "likely_to_move_score": 0.026632339,
+  "likely_to_get_moving_score": 0.49275044,
   "inclusion_reasons": [
-    "manual watchlist"
+    "stage is OnCalendar or later"
   ],
   "days_since_latest_action": null,
   "alternatives": [
     {
-      "event": "NegotiationIntensifies",
-      "score": 0.6129992,
-      "reason": "near-threshold numbers and pivotal senators keep bargaining active"
-    },
-    {
-      "event": "MotionToProceedAttempted",
-      "score": 0.5858797,
-      "reason": "leadership has enough incentive to test floor access"
+      "event": "NoMeaningfulMovement",
+      "score": 0.7888,
+      "reason": "weak coalition pressure and low immediate urgency favor inaction"
     },
     {
       "event": "LeadershipSignalsAction",
-      "score": 0.4908,
+      "score": 0.6868,
       "reason": "leadership pressure is building even without a clean formal path"
+    },
+    {
+      "event": "MotionToProceedAttempted",
+      "score": 0.38343534,
+      "reason": "leadership has enough incentive to test floor access"
     }
   ],
   "pivots": [
@@ -53,60 +53,60 @@
       "senator_name": "Thune, John",
       "state": "SD",
       "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
       "procedural_posture": "Unclear",
-      "substantive_support": 0.61175066,
+      "substantive_support": 0.5359388,
       "procedural_support": 0.64786345,
-      "negotiability": 0.14874214
+      "negotiability": 0.16087204
     },
     {
       "senator_id": "real_t000278",
       "senator_name": "Tuberville, Tommy",
       "state": "AL",
       "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
       "procedural_posture": "Unclear",
-      "substantive_support": 0.6146368,
+      "substantive_support": 0.5373129,
       "procedural_support": 0.6765105,
-      "negotiability": 0.10936149
+      "negotiability": 0.1217333
     },
     {
       "senator_id": "real_l000577",
       "senator_name": "Lee, Mike",
       "state": "UT",
       "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
       "procedural_posture": "Unclear",
-      "substantive_support": 0.6153359,
+      "substantive_support": 0.53783584,
       "procedural_support": 0.68134147,
-      "negotiability": 0.108744495
-    },
-    {
-      "senator_id": "real_p000603",
-      "senator_name": "Paul, Rand",
-      "state": "KY",
-      "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
-      "procedural_posture": "Unclear",
-      "substantive_support": 0.602201,
-      "procedural_support": 0.7121123,
-      "negotiability": 0.1466147
+      "negotiability": 0.121144496
     },
     {
       "senator_id": "real_j000293",
       "senator_name": "Johnson, Ron",
       "state": "WI",
       "party": "Republican",
-      "reason": "marginal support and meaningful negotiability make this senator pivotal",
-      "stance_label": "LeanSupport",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
       "procedural_posture": "Unclear",
-      "substantive_support": 0.6153359,
+      "substantive_support": 0.53783584,
       "procedural_support": 0.6846748,
-      "negotiability": 0.108744495
+      "negotiability": 0.121144496
+    },
+    {
+      "senator_id": "real_s001217",
+      "senator_name": "Scott, Rick",
+      "state": "FL",
+      "party": "Republican",
+      "reason": "undecided stance leaves this senator near the coalition boundary",
+      "stance_label": "Undecided",
+      "procedural_posture": "Unclear",
+      "substantive_support": 0.5387562,
+      "procedural_support": 0.6861371,
+      "negotiability": 0.12010818
     }
   ],
   "blockers": [
@@ -118,7 +118,7 @@
       "reason": "low procedural support and high rigidity mark a likely blocker",
       "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406
+      "rigidity": 0.8555742
     },
     {
       "senator_id": "real_b001288",
@@ -128,7 +128,7 @@
       "reason": "low procedural support and high rigidity mark a likely blocker",
       "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406
+      "rigidity": 0.8555742
     },
     {
       "senator_id": "real_c001088",
@@ -138,7 +138,7 @@
       "reason": "low procedural support and high rigidity mark a likely blocker",
       "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406
+      "rigidity": 0.8555742
     },
     {
       "senator_id": "real_w000790",
@@ -148,7 +148,7 @@
       "reason": "low procedural support and high rigidity mark a likely blocker",
       "public_position": "Undeclared",
       "defection_probability": 0.0,
-      "rigidity": 0.8597406
+      "rigidity": 0.8555742
     },
     {
       "senator_id": "real_v000128",
@@ -156,54 +156,54 @@
       "state": "MD",
       "party": "Democrat",
       "reason": "low procedural support and high rigidity mark a likely blocker",
-      "public_position": "Mixed",
-      "defection_probability": 0.0,
-      "rigidity": 0.8208933
+      "public_position": "Undeclared",
+      "defection_probability": 0.013348505,
+      "rigidity": 0.8167269
     }
   ],
   "defectors": [],
   "rollout_steps": [
     {
       "step_index": 0,
-      "starting_stage": "InCommittee",
-      "predicted_event": "NoMeaningfulMovement",
-      "confidence": 0.4763849,
+      "starting_stage": "OnCalendar",
+      "predicted_event": "NegotiationIntensifies",
+      "confidence": 0.571024,
       "support_count": 0,
-      "lean_support_count": 53,
-      "undecided_count": 2,
+      "lean_support_count": 0,
+      "undecided_count": 98,
       "oppose_count": 0,
-      "simple_majority_viable": true,
+      "simple_majority_viable": false,
       "cloture_viable": false
     },
     {
       "step_index": 1,
-      "starting_stage": "InCommittee",
-      "predicted_event": "NoMeaningfulMovement",
-      "confidence": 0.5084015,
+      "starting_stage": "OnCalendar",
+      "predicted_event": "NegotiationIntensifies",
+      "confidence": 0.6080161,
       "support_count": 0,
-      "lean_support_count": 53,
-      "undecided_count": 2,
+      "lean_support_count": 0,
+      "undecided_count": 98,
       "oppose_count": 0,
-      "simple_majority_viable": true,
+      "simple_majority_viable": false,
       "cloture_viable": false
     }
   ],
   "top_findings": [
-    "current support coalition is 53 likely/lean supporters out of 94 expected present",
-    "simple majority is viable at an estimated 54.7 votes against a 48-vote threshold",
+    "current support coalition is 0 likely/lean supporters out of 94 expected present",
+    "simple majority is not yet viable; estimated support is 31.6 against a 48-vote threshold",
     "cloture remains short at an estimated 30.8 procedural votes",
     "coalition stability is weak and vulnerable to movement",
     "5 likely procedural blockers materially raise filibuster risk"
   ],
   "top_reasons": [
-    "weak coalition pressure and low immediate urgency favor inaction",
-    "simple-majority math currently favors action",
+    "near-threshold numbers and pivotal senators keep bargaining active",
+    "simple-majority support is not yet locked in",
     "procedural coalition is weak enough to constrain floor movement",
     "deadline and media pressure reduce the odds of passive drift",
-    "simple majority coalition exists in the current chamber snapshot",
+    "simple majority coalition does not yet exist",
     "cloture path remains below the 60-vote threshold",
     "limited leadership priority reduces pressure for immediate floor action",
     "fragile coalition dynamics point toward bargaining rather than clean passage"
   ],
-  "termination_reason": "NoMeaningfulFurtherMovement"
+  "termination_reason": "LoopDetected"
 }
