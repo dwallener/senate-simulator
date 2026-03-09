@@ -15,11 +15,13 @@ use crate::{
         issue_preferences::IssuePreferences,
         legislative::LegislativeObject,
         legislative_context::LegislativeContext,
+        normalized_public_signal_record::NormalizedPublicSignalRecord,
         normalized_records::{
             NormalizedActionRecord, NormalizedLegislativeRecord, NormalizedSenatorRecord,
             NormalizedVoteRecord,
         },
         procedural::Procedural,
+        public_signal_summary::PublicSignalSummary,
         senator::Senator,
         structural::Structural,
     },
@@ -36,16 +38,20 @@ pub fn build_snapshot(
     raw_legislation: &[crate::model::raw_records::RawLegislativeRecord],
     raw_actions: &[crate::model::raw_records::RawActionRecord],
     raw_votes: &[crate::model::raw_records::RawVoteRecord],
+    raw_public_signals: &[crate::model::raw_public_signal_record::RawPublicSignalRecord],
     roster_records: Vec<NormalizedSenatorRecord>,
     legislative_records: Vec<NormalizedLegislativeRecord>,
     action_records: Vec<NormalizedActionRecord>,
     vote_records: Vec<NormalizedVoteRecord>,
+    public_signal_records: Vec<NormalizedPublicSignalRecord>,
+    public_signal_summary: Option<PublicSignalSummary>,
 ) -> Result<DataSnapshot, SenateSimError> {
     let manifests = vec![
         manifest_for("roster", run_date, raw_roster)?,
         manifest_for("legislation", run_date, raw_legislation)?,
         manifest_for("actions", run_date, raw_actions)?,
         manifest_for("votes", run_date, raw_votes)?,
+        manifest_for("public_signals", run_date, raw_public_signals)?,
     ];
 
     let snapshot = DataSnapshot {
@@ -56,6 +62,8 @@ pub fn build_snapshot(
         legislative_records,
         action_records,
         vote_records,
+        public_signal_records,
+        public_signal_summary,
         source_manifests: manifests,
     };
     snapshot.validate()?;
@@ -69,12 +77,16 @@ pub fn persist_normalized_records(
     legislative_records: &[NormalizedLegislativeRecord],
     action_records: &[NormalizedActionRecord],
     vote_records: &[NormalizedVoteRecord],
+    public_signal_records: &[NormalizedPublicSignalRecord],
+    public_signal_summary: &PublicSignalSummary,
 ) -> Result<(), SenateSimError> {
     let base = normalized_storage_dir(data_root, run_date);
     write_json_file(&base.join("senators.json"), roster_records)?;
     write_json_file(&base.join("legislation.json"), legislative_records)?;
     write_json_file(&base.join("actions.json"), action_records)?;
     write_json_file(&base.join("votes.json"), vote_records)?;
+    write_json_file(&base.join("public_signals.json"), public_signal_records)?;
+    write_json_file(&base.join("public_signal_summary.json"), public_signal_summary)?;
     Ok(())
 }
 
@@ -150,8 +162,24 @@ pub fn snapshot_to_contexts(
 ) -> Result<Vec<LegislativeContext>, SenateSimError> {
     let mut contexts = Vec::with_capacity(snapshot.legislative_records.len());
     for record in &snapshot.legislative_records {
-        let context =
+        let mut context =
             default_context_for_stage(snapshot.snapshot_date, record.current_stage.clone());
+        if let Some(summary) = &snapshot.public_signal_summary {
+            let object_attention = summary
+                .object_attention
+                .get(&record.object_id)
+                .copied()
+                .unwrap_or(0.0);
+            let domain_attention = summary
+                .domain_attention
+                .get(&record.policy_domain)
+                .copied()
+                .unwrap_or(0.0);
+            let signal_attention = object_attention.max(domain_attention);
+            context.media_attention = context.media_attention.max(signal_attention);
+            context.leadership_priority =
+                (context.leadership_priority + signal_attention * 0.12).clamp(0.0, 1.0);
+        }
         context.validate()?;
         contexts.push(context);
     }
@@ -256,7 +284,7 @@ fn manifest_for<T: Serialize>(
     })
 }
 
-fn write_json_file<T: Serialize + ?Sized>(path: &Path, value: &T) -> Result<(), SenateSimError> {
+pub(crate) fn write_json_file<T: Serialize + ?Sized>(path: &Path, value: &T) -> Result<(), SenateSimError> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|source| SenateSimError::Io {
             path: parent.to_path_buf(),
@@ -427,12 +455,12 @@ mod tests {
             &temp_dir,
         )
         .unwrap();
-        assert_eq!(snapshot.source_manifests.len(), 4);
+        assert_eq!(snapshot.source_manifests.len(), 5);
         assert!(
             snapshot
                 .source_manifests
                 .iter()
-                .all(|manifest| !manifest.content_hash.is_empty() && manifest.record_count > 0)
+                .all(|manifest| !manifest.content_hash.is_empty())
         );
     }
 

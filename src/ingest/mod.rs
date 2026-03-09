@@ -1,9 +1,11 @@
 pub mod actions;
 pub mod config;
 pub mod congress_api;
+pub mod gdelt;
 pub mod legislation;
 pub mod live;
 pub mod normalize;
+pub mod public_signals;
 pub mod roster;
 pub mod senate_votes;
 pub mod snapshot;
@@ -17,6 +19,7 @@ use chrono::NaiveDate;
 use crate::{error::SenateSimError, model::data_snapshot::DataSnapshot};
 
 pub use config::{IngestionConfig, IngestionSourceMode};
+pub use public_signals::{build_public_signal_artifacts, ingest_public_signals};
 pub use snapshot::{
     load_snapshot, snapshot_storage_dir, snapshot_to_contexts, snapshot_to_legislative_objects,
     snapshot_to_senators,
@@ -36,11 +39,7 @@ pub fn run_live_ingestion(config: &IngestionConfig) -> Result<DataSnapshot, Sena
 
 pub fn run_ingestion(config: &IngestionConfig) -> Result<DataSnapshot, SenateSimError> {
     match config.source_mode {
-        IngestionSourceMode::Fixtures => run_daily_ingestion_with_roots(
-            config.run_date,
-            &config.fixture_root,
-            &config.output_root,
-        ),
+        IngestionSourceMode::Fixtures => run_fixture_ingestion(config),
         IngestionSourceMode::Live => run_live_ingestion_with_roots(config),
     }
 }
@@ -50,6 +49,22 @@ pub fn run_daily_ingestion_with_roots(
     fixture_root: &Path,
     data_root: &Path,
 ) -> Result<DataSnapshot, SenateSimError> {
+    run_fixture_ingestion(&IngestionConfig {
+        run_date,
+        source_mode: IngestionSourceMode::Fixtures,
+        congress_api_key: None,
+        output_root: data_root.to_path_buf(),
+        fixture_root: fixture_root.to_path_buf(),
+        use_cached_raw_if_present: false,
+        include_gdelt: false,
+        gdelt_query_limit: 5,
+    })
+}
+
+fn run_fixture_ingestion(config: &IngestionConfig) -> Result<DataSnapshot, SenateSimError> {
+    let run_date = config.run_date;
+    let fixture_root = config.fixture_root.as_path();
+    let data_root = config.output_root.as_path();
     let raw_roster = roster::ingest_roster(run_date, fixture_root, data_root)?;
     let raw_legislation = legislation::ingest_legislation(run_date, fixture_root, data_root)?;
     let raw_actions = actions::ingest_actions(run_date, fixture_root, data_root)?;
@@ -59,6 +74,14 @@ pub fn run_daily_ingestion_with_roots(
     let normalized_legislation = normalize::normalize_legislation(&raw_legislation)?;
     let normalized_actions = normalize::normalize_actions(&raw_actions)?;
     let normalized_votes = normalize::normalize_votes(&raw_votes)?;
+    let raw_public_signals = public_signals::ingest_public_signals(
+        config,
+        data_root,
+        &normalized_roster,
+        &normalized_legislation,
+    )?;
+    let (normalized_public_signals, public_signal_summary) =
+        public_signals::build_public_signal_artifacts(run_date, &raw_public_signals)?;
 
     snapshot::persist_normalized_records(
         data_root,
@@ -67,6 +90,8 @@ pub fn run_daily_ingestion_with_roots(
         &normalized_legislation,
         &normalized_actions,
         &normalized_votes,
+        &normalized_public_signals,
+        &public_signal_summary,
     )?;
 
     let data_snapshot = snapshot::build_snapshot(
@@ -75,10 +100,13 @@ pub fn run_daily_ingestion_with_roots(
         &raw_legislation,
         &raw_actions,
         &raw_votes,
+        &raw_public_signals,
         normalized_roster,
         normalized_legislation,
         normalized_actions,
         normalized_votes,
+        normalized_public_signals,
+        Some(public_signal_summary),
     )?;
     snapshot::persist_snapshot(data_root, &data_snapshot)?;
 
@@ -93,6 +121,14 @@ pub fn run_live_ingestion_with_roots(
     let normalized_legislation = normalize::normalize_legislation(&records.legislation)?;
     let normalized_actions = normalize::normalize_actions(&records.actions)?;
     let normalized_votes = normalize::normalize_votes(&records.votes)?;
+    let raw_public_signals = public_signals::ingest_public_signals(
+        config,
+        &config.output_root,
+        &normalized_roster,
+        &normalized_legislation,
+    )?;
+    let (normalized_public_signals, public_signal_summary) =
+        public_signals::build_public_signal_artifacts(config.run_date, &raw_public_signals)?;
 
     snapshot::persist_normalized_records(
         &config.output_root,
@@ -101,6 +137,8 @@ pub fn run_live_ingestion_with_roots(
         &normalized_legislation,
         &normalized_actions,
         &normalized_votes,
+        &normalized_public_signals,
+        &public_signal_summary,
     )?;
 
     let data_snapshot = snapshot::build_snapshot(
@@ -109,10 +147,13 @@ pub fn run_live_ingestion_with_roots(
         &records.legislation,
         &records.actions,
         &records.votes,
+        &raw_public_signals,
         normalized_roster,
         normalized_legislation,
         normalized_actions,
         normalized_votes,
+        normalized_public_signals,
+        Some(public_signal_summary),
     )?;
     snapshot::persist_snapshot(&config.output_root, &data_snapshot)?;
     Ok(data_snapshot)
@@ -145,6 +186,25 @@ mod tests {
             via_config.legislative_records.len(),
             direct.legislative_records.len()
         );
+        assert!(via_config.public_signal_records.is_empty());
+    }
+
+    #[test]
+    fn fixture_gdelt_inclusion_obeys_config() {
+        let temp_dir = std::env::temp_dir().join("senate_sim_ingest_fixture_gdelt");
+        let _ = fs::remove_dir_all(&temp_dir);
+        let date = NaiveDate::from_ymd_opt(2026, 3, 9).unwrap();
+        let mut without = IngestionConfig::fixtures(date);
+        without.output_root = temp_dir.join("without");
+        let without_snapshot = run_ingestion(&without).unwrap();
+        assert!(without_snapshot.public_signal_records.is_empty());
+
+        let mut with = IngestionConfig::fixtures(date);
+        with.output_root = temp_dir.join("with");
+        with.include_gdelt = true;
+        let with_snapshot = run_ingestion(&with).unwrap();
+        assert!(!with_snapshot.public_signal_records.is_empty());
+        assert!(with_snapshot.public_signal_summary.is_some());
     }
 
     #[test]
@@ -258,6 +318,8 @@ mod tests {
             output_root: temp_dir.clone(),
             fixture_root: Path::new("fixtures/ingest").to_path_buf(),
             use_cached_raw_if_present: true,
+            include_gdelt: false,
+            gdelt_query_limit: 5,
         };
         let snapshot = run_ingestion(&config).unwrap();
         assert_eq!(snapshot.legislative_records.len(), 1);

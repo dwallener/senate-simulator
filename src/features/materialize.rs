@@ -89,10 +89,40 @@ pub fn feature_record_to_senator(
 }
 
 pub fn snapshot_with_features_to_senators(
-    _snapshot: &DataSnapshot,
+    snapshot: &DataSnapshot,
     features: &[SenatorFeatureRecord],
 ) -> Result<Vec<Senator>, SenateSimError> {
-    features.iter().map(feature_record_to_senator).collect()
+    let summary = snapshot.public_signal_summary.as_ref();
+    features
+        .iter()
+        .map(|record| {
+            let mut senator = feature_record_to_senator(record)?;
+            if let Some(summary) = summary {
+                let attention = summary
+                    .senator_attention
+                    .get(&record.senator_id)
+                    .copied()
+                    .unwrap_or(0.0);
+                let strongest_link = summary
+                    .senator_object_link_strength
+                    .iter()
+                    .filter(|link| link.senator_id == record.senator_id)
+                    .map(|link| link.public_association_score)
+                    .fold(0.0, f32::max);
+                senator.dynamic_state.current_issue_salience_in_state = senator
+                    .dynamic_state
+                    .current_issue_salience_in_state
+                    .max((attention * 0.7) + (strongest_link * 0.3));
+                if attention > 0.0 {
+                    senator
+                        .feature_notes
+                        .push(format!("public narrative attention score {:.2}", attention));
+                }
+            }
+            senator.validate()?;
+            Ok(senator)
+        })
+        .collect()
 }
 
 pub fn senators_for_snapshot(

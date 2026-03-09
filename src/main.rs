@@ -16,6 +16,7 @@ fn main() {
         Some("eval-run") => run_eval_run_command(&args[1..]),
         Some("features-build") => run_features_build_command(&args[1..]),
         Some("features-inspect") => run_features_inspect_command(&args[1..]),
+        Some("signals-inspect") => run_signals_inspect_command(&args[1..]),
         Some("stance-inspect") => run_stance_inspect_command(&args[1..]),
         _ => run_default_demo(),
     };
@@ -33,6 +34,7 @@ fn run_ingest_command(args: &[String]) -> Result<(), senate_simulator::SenateSim
     let mut config = IngestionConfig::fixtures(run_date);
     config.source_mode = source_mode;
     config.use_cached_raw_if_present = args.iter().any(|arg| arg == "--reuse-raw");
+    config.include_gdelt = args.iter().any(|arg| arg == "--include-gdelt");
     if source_mode == IngestionSourceMode::Live {
         config.congress_api_key = std::env::var("API_KEY_DATA_GOV").ok();
     }
@@ -177,6 +179,55 @@ fn run_stance_inspect_command(args: &[String]) -> Result<(), senate_simulator::S
         })?;
     let stance = derive_stance_with_mode(senator, &objects[index], &contexts[index], mode)?;
     print_stance_details(&stance);
+    Ok(())
+}
+
+fn run_signals_inspect_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
+    let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
+    let snapshot_date = parse_date(date)?;
+    let mut snapshot = load_or_refresh_snapshot(snapshot_date)?;
+    if snapshot.public_signal_records.is_empty() {
+        let mut config = IngestionConfig::fixtures(snapshot_date);
+        config.include_gdelt = true;
+        snapshot = run_ingestion(&config)?;
+    }
+    println!(
+        "Public signals {}: records={}",
+        snapshot.snapshot_date,
+        snapshot.public_signal_records.len()
+    );
+    if let Some(object_id) = parse_date_arg(args, "--object-id") {
+        for record in snapshot
+            .public_signal_records
+            .iter()
+            .filter(|record| record.linked_object_id.as_deref() == Some(object_id))
+        {
+            print_public_signal_record(record);
+        }
+    } else if let Some(senator_id) = parse_date_arg(args, "--senator-id") {
+        for record in snapshot
+            .public_signal_records
+            .iter()
+            .filter(|record| record.linked_senator_id.as_deref() == Some(senator_id))
+        {
+            print_public_signal_record(record);
+        }
+    } else {
+        for record in snapshot.public_signal_records.iter().take(5) {
+            print_public_signal_record(record);
+        }
+    }
+    if let Some(summary) = &snapshot.public_signal_summary {
+        println!(
+            "  summary: object_attention={} senator_attention={} domain_attention={}",
+            summary.object_attention.len(),
+            summary.senator_attention.len(),
+            summary.domain_attention.len()
+        );
+        for note in &summary.notes {
+            println!("  - {note}");
+        }
+    }
     Ok(())
 }
 
@@ -364,6 +415,28 @@ fn print_stance_details(stance: &senate_simulator::SenatorStance) {
     }
     for factor in &stance.top_factors {
         println!("  - {factor}");
+    }
+}
+
+fn print_public_signal_record(record: &senate_simulator::NormalizedPublicSignalRecord) {
+    println!(
+        "Signal {} {:?}: mentions={}, attention={:.2}, senator={:?}, object={:?}, domain={:?}",
+        record.signal_id,
+        record.signal_scope,
+        record.mention_count,
+        record.attention_score,
+        record.linked_senator_id,
+        record.linked_object_id,
+        record.policy_domain
+    );
+    if let Some(tone) = record.tone_score {
+        println!("  tone={:.2}", tone);
+    }
+    if !record.top_themes.is_empty() {
+        println!("  themes={}", record.top_themes.join(", "));
+    }
+    if !record.top_organizations.is_empty() {
+        println!("  sources={}", record.top_organizations.join(", "));
     }
 }
 

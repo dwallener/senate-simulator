@@ -356,6 +356,8 @@ mod tests {
             }],
             action_records: vec![],
             vote_records: vec![],
+            public_signal_records: vec![],
+            public_signal_summary: None,
             source_manifests: vec![SourceManifest {
                 source_name: "test".to_string(),
                 fetched_at: chrono::DateTime::<chrono::Utc>::from_timestamp(1_700_000_000, 0)

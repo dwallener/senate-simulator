@@ -1,0 +1,73 @@
+[
+  {
+    "signal_id": "gdelt_object_s_2100",
+    "scope": "legislative_object",
+    "query": "\"Clean Energy Permitting Reform Act\" OR s_2100",
+    "linked_object_id": "s_2100",
+    "policy_domain": "energy_climate",
+    "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=s_2100",
+    "raw_payload": {
+      "payload": {
+        "articles": [
+          {
+            "title": "Clean energy permitting bill gains momentum",
+            "sourceCommonName": "Reuters",
+            "domain": "reuters.com",
+            "tone": 3.0
+          },
+          {
+            "title": "Senate climate compromise draws national attention",
+            "sourceCommonName": "AP",
+            "domain": "apnews.com",
+            "tone": -1.0
+          }
+        ]
+      }
+    }
+  },
+  {
+    "signal_id": "gdelt_senator_real_a0001",
+    "scope": "senator",
+    "query": "\"Alex Adams\" AND WA",
+    "linked_senator_id": "real_a0001",
+    "policy_domain": "energy_climate",
+    "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=Alex+Adams",
+    "raw_payload": {
+      "payload": {
+        "articles": [
+          {
+            "title": "Alex Adams presses for faster transmission permitting",
+            "sourceCommonName": "Politico",
+            "domain": "politico.com",
+            "tone": 5.0
+          }
+        ]
+      }
+    }
+  },
+  {
+    "signal_id": "gdelt_domain_energy_climate",
+    "scope": "policy_domain",
+    "query": "energy OR climate OR permitting",
+    "policy_domain": "energy_climate",
+    "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=energy+climate+permitting",
+    "raw_payload": {
+      "payload": {
+        "articles": [
+          {
+            "title": "Energy permitting remains a hot Senate issue",
+            "sourceCommonName": "CNN",
+            "domain": "cnn.com",
+            "tone": 1.0
+          },
+          {
+            "title": "Climate politics intensify ahead of floor action",
+            "sourceCommonName": "The Hill",
+            "domain": "thehill.com",
+            "tone": -2.0
+          }
+        ]
+      }
+    }
+  }
+]

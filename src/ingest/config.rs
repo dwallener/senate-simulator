@@ -16,6 +16,8 @@ pub struct IngestionConfig {
     pub output_root: PathBuf,
     pub fixture_root: PathBuf,
     pub use_cached_raw_if_present: bool,
+    pub include_gdelt: bool,
+    pub gdelt_query_limit: usize,
 }
 
 impl IngestionConfig {
@@ -27,6 +29,8 @@ impl IngestionConfig {
             output_root: PathBuf::from("data"),
             fixture_root: PathBuf::from("fixtures/ingest"),
             use_cached_raw_if_present: false,
+            include_gdelt: false,
+            gdelt_query_limit: 5,
         }
     }
 
@@ -38,6 +42,8 @@ impl IngestionConfig {
             output_root: PathBuf::from("data"),
             fixture_root: PathBuf::from("fixtures/ingest"),
             use_cached_raw_if_present: false,
+            include_gdelt: false,
+            gdelt_query_limit: 5,
         }
     }
 }

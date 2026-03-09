@@ -54,7 +54,7 @@ impl LegislativeObject {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum LegislativeObjectType {
     Bill,
     Amendment,
@@ -134,7 +134,7 @@ impl<'de> Deserialize<'de> for LegislativeObjectType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PolicyDomain {
     Defense,
     BudgetTax,

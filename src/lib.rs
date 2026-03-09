@@ -64,7 +64,10 @@ pub use model::normalized_records::{
     NormalizedActionCategory, NormalizedActionRecord, NormalizedLegislativeRecord,
     NormalizedSenatorRecord, NormalizedVoteRecord, ProceduralKind, VoteCategory, VotePosition,
 };
+pub use model::normalized_public_signal_record::NormalizedPublicSignalRecord;
+pub use model::public_signal_summary::{PublicSignalSummary, SenatorObjectSignalLink};
 pub use model::raw_records::{RawActionRecord, RawLegislativeRecord, RawRosterRecord, RawVoteRecord};
+pub use model::raw_public_signal_record::{PublicSignalScope, RawPublicSignalRecord};
 pub use model::senator_feature_record::{FeatureReport, SenatorFeatureRecord};
 pub use model::scenario::SenatorScenario;
 pub use model::senate_analysis::{PivotSummary, SenateAnalysis, SenatorSignalSummary};

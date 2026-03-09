@@ -7,6 +7,8 @@ use crate::{
         NormalizedActionRecord, NormalizedLegislativeRecord, NormalizedSenatorRecord,
         NormalizedVoteRecord,
     },
+    model::normalized_public_signal_record::NormalizedPublicSignalRecord,
+    model::public_signal_summary::PublicSignalSummary,
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -28,6 +30,10 @@ pub struct DataSnapshot {
     pub legislative_records: Vec<NormalizedLegislativeRecord>,
     pub action_records: Vec<NormalizedActionRecord>,
     pub vote_records: Vec<NormalizedVoteRecord>,
+    #[serde(default)]
+    pub public_signal_records: Vec<NormalizedPublicSignalRecord>,
+    #[serde(default)]
+    pub public_signal_summary: Option<PublicSignalSummary>,
     pub source_manifests: Vec<SourceManifest>,
 }
 
@@ -51,6 +57,12 @@ impl DataSnapshot {
         }
         for record in &self.vote_records {
             record.validate()?;
+        }
+        for record in &self.public_signal_records {
+            record.validate()?;
+        }
+        if let Some(summary) = &self.public_signal_summary {
+            summary.validate()?;
         }
 
         Ok(())
