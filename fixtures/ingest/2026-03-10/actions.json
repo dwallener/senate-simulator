@@ -1,0 +1,35 @@
+[
+  {
+    "source_action_id": "act_001",
+    "object_id": "s_2100",
+    "action_date": "2026-02-10",
+    "action_text": "Introduced in Senate and read twice.",
+    "action_type": "introduced",
+    "chamber": "Senate",
+    "source_name": "fixture_actions",
+    "source_identifier": "action_act_001",
+    "source_url": "https://example.test/actions/act_001"
+  },
+  {
+    "source_action_id": "act_002",
+    "object_id": "s_2100",
+    "action_date": "2026-03-09",
+    "action_text": "Cloture filed on the motion to proceed.",
+    "action_type": "cloture",
+    "chamber": "Senate",
+    "source_name": "fixture_actions",
+    "source_identifier": "action_act_002",
+    "source_url": "https://example.test/actions/act_002"
+  },
+  {
+    "source_action_id": "act_003",
+    "object_id": "s_2100",
+    "action_date": "2026-03-10",
+    "action_text": "Cloture vote scheduled in the Senate.",
+    "action_type": "cloture",
+    "chamber": "Senate",
+    "source_name": "fixture_actions",
+    "source_identifier": "action_act_003",
+    "source_url": "https://example.test/actions/act_003"
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "source_member_id": "A0001",
+    "name": "Avery North",
+    "party": "Democrat",
+    "state": "CA",
+    "start_date": "2023-01-03",
+    "end_date": null,
+    "source_name": "fixture_roster",
+    "source_identifier": "member_A0001",
+    "source_url": "https://example.test/roster/A0001"
+  },
+  {
+    "source_member_id": "B0002",
+    "name": "Blake Stone",
+    "party": "Republican",
+    "state": "TX",
+    "start_date": "2021-01-03",
+    "end_date": null,
+    "source_name": "fixture_roster",
+    "source_identifier": "member_B0002",
+    "source_url": "https://example.test/roster/B0002"
+  },
+  {
+    "source_member_id": "C0003",
+    "name": "Casey Harbor",
+    "party": "Independent",
+    "state": "ME",
+    "start_date": "2025-01-03",
+    "end_date": null,
+    "source_name": "fixture_roster",
+    "source_identifier": "member_C0003",
+    "source_url": "https://example.test/roster/C0003"
+  },
+  {
+    "source_member_id": "D0004",
+    "name": "Dakota Fields",
+    "party": "Democrat",
+    "state": "CO",
+    "start_date": "2019-01-03",
+    "end_date": null,
+    "source_name": "fixture_roster",
+    "source_identifier": "member_D0004",
+    "source_url": "https://example.test/roster/D0004"
+  }
+]
