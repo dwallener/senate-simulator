@@ -29,11 +29,11 @@ pub fn ingest_votes(
 
     records
         .into_iter()
-        .map(|record| parse_raw_vote_record(record, run_date, fetched_at))
+        .map(|record| parse_raw_vote_record_value(record, run_date, fetched_at))
         .collect()
 }
 
-fn parse_raw_vote_record(
+pub fn parse_raw_vote_record_value(
     value: Value,
     run_date: NaiveDate,
     fetched_at: chrono::DateTime<chrono::Utc>,

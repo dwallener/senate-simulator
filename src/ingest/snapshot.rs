@@ -323,7 +323,15 @@ mod tests {
     };
 
     fn test_roots() -> (std::path::PathBuf, &'static Path) {
-        let temp_dir = std::env::temp_dir().join("senate_sim_ingest_snapshot_tests");
+        let unique = format!(
+            "senate_sim_ingest_snapshot_tests_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        let temp_dir = std::env::temp_dir().join(unique);
         let _ = std::fs::remove_dir_all(&temp_dir);
         (temp_dir, Path::new("fixtures/ingest"))
     }

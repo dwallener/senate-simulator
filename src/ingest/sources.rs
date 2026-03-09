@@ -76,6 +76,31 @@ pub fn write_json_value(path: &Path, value: &Value) -> Result<(), SenateSimError
     })
 }
 
+pub fn write_string(path: &Path, contents: &str) -> Result<(), SenateSimError> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|source| SenateSimError::Io {
+            path: parent.to_path_buf(),
+            source,
+        })?;
+    }
+
+    fs::write(path, contents).map_err(|source| SenateSimError::Io {
+        path: path.to_path_buf(),
+        source,
+    })
+}
+
+pub fn read_string(path: &Path) -> Result<String, SenateSimError> {
+    fs::read_to_string(path).map_err(|source| SenateSimError::Io {
+        path: path.to_path_buf(),
+        source,
+    })
+}
+
+pub fn raw_storage_dir(data_root: &Path, run_date: NaiveDate) -> PathBuf {
+    data_root.join("raw").join(run_date.to_string())
+}
+
 pub fn fetched_at_for(run_date: NaiveDate) -> Result<DateTime<Utc>, SenateSimError> {
     let naive = run_date
         .and_hms_opt(12, 0, 0)

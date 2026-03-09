@@ -16,6 +16,12 @@ pub enum SenateSimError {
         #[source]
         source: serde_json::Error,
     },
+    #[error("HTTP client error: {0}")]
+    HttpClient(#[source] reqwest::Error),
+    #[error("HTTP error from {url}: status {status}")]
+    HttpStatus { url: String, status: reqwest::StatusCode },
+    #[error("XML parse error: {0}")]
+    Xml(#[source] quick_xml::DeError),
     #[error("JSON serialization error: {0}")]
     Serialize(#[source] serde_json::Error),
     #[error("validation error for {field}: {message}")]

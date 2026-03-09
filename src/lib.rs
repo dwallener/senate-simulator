@@ -40,7 +40,8 @@ pub use features::senator::{
 pub use features::windows::FeatureWindowConfig;
 pub use eval::timeline::build_historical_timelines;
 pub use ingest::{
-    load_snapshot, run_daily_ingestion, run_daily_ingestion_with_roots, snapshot_to_contexts,
+    IngestionConfig, IngestionSourceMode, load_snapshot, run_daily_ingestion, run_daily_ingestion_with_roots,
+    run_ingestion, run_live_ingestion, run_live_ingestion_with_roots, snapshot_to_contexts,
     snapshot_to_legislative_objects, snapshot_to_senators,
 };
 pub use model::action_alignment::AlignmentReport;

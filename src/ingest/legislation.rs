@@ -23,11 +23,11 @@ pub fn ingest_legislation(
 
     records
         .into_iter()
-        .map(|record| parse_raw_legislative_record(record, run_date, fetched_at))
+        .map(|record| parse_raw_legislative_record_value(record, run_date, fetched_at))
         .collect()
 }
 
-fn parse_raw_legislative_record(
+pub fn parse_raw_legislative_record_value(
     value: Value,
     run_date: NaiveDate,
     fetched_at: chrono::DateTime<chrono::Utc>,

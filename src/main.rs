@@ -1,9 +1,9 @@
 use senate_simulator::{
     AlignmentReport, BacktestResult, DataSnapshot, EvaluationSummary,
     FeatureReport, FeatureWindowConfig, SenatorFeatureRecord, build_and_persist_features,
-    StanceDerivationMode, build_evaluation_artifacts_for_snapshot_date, derive_stance_with_mode,
+    IngestionConfig, IngestionSourceMode, StanceDerivationMode, build_evaluation_artifacts_for_snapshot_date, derive_stance_with_mode,
     evaluate_from_snapshot_date_with_mode, load_feature_records, load_snapshot,
-    run_backtest_with_mode, run_daily_ingestion, snapshot_to_contexts,
+    run_backtest_with_mode, run_daily_ingestion, run_ingestion, snapshot_to_contexts,
     snapshot_to_legislative_objects, snapshot_with_features_to_senators,
 };
 
@@ -29,7 +29,14 @@ fn main() {
 fn run_ingest_command(args: &[String]) -> Result<(), senate_simulator::SenateSimError> {
     let date = parse_date_arg(args, "--date").unwrap_or("2026-03-09");
     let run_date = parse_date(date)?;
-    let snapshot = run_daily_ingestion(run_date)?;
+    let source_mode = parse_source_mode(parse_date_arg(args, "--source").unwrap_or("fixtures"))?;
+    let mut config = IngestionConfig::fixtures(run_date);
+    config.source_mode = source_mode;
+    config.use_cached_raw_if_present = args.iter().any(|arg| arg == "--reuse-raw");
+    if source_mode == IngestionSourceMode::Live {
+        config.congress_api_key = std::env::var("API_KEY_DATA_GOV").ok();
+    }
+    let snapshot = run_ingestion(&config)?;
     print_snapshot_summary(&snapshot);
     Ok(())
 }
@@ -199,6 +206,19 @@ fn parse_stance_mode(
         _ => Err(senate_simulator::SenateSimError::Validation {
             field: "cli.stance_mode",
             message: format!("invalid stance mode {value}, expected heuristic or feature"),
+        }),
+    }
+}
+
+fn parse_source_mode(
+    value: &str,
+) -> Result<IngestionSourceMode, senate_simulator::SenateSimError> {
+    match value {
+        "fixtures" | "fixture" => Ok(IngestionSourceMode::Fixtures),
+        "live" => Ok(IngestionSourceMode::Live),
+        _ => Err(senate_simulator::SenateSimError::Validation {
+            field: "cli.source",
+            message: format!("invalid source mode {value}, expected fixtures or live"),
         }),
     }
 }
