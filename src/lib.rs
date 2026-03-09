@@ -3,6 +3,7 @@ pub mod derive;
 pub mod error;
 pub mod io;
 pub mod model;
+pub mod simulation;
 pub mod synthetic;
 
 pub use analysis::chamber::analyze_chamber;
@@ -25,4 +26,9 @@ pub use model::senate_analysis::{PivotSummary, SenateAnalysis, SenatorSignalSumm
 pub use model::senate_event::SenateEvent;
 pub use model::senator::Senator;
 pub use model::senator_stance::{ProceduralPosture, SenatorStance, StanceLabel};
+pub use model::simulation_state::SimulationState;
+pub use model::simulation_step::{SimulationStep, StepAnalysisSummary};
+pub use model::trajectory_result::{TerminationReason, TrajectoryResult};
+pub use simulation::apply::apply_event;
+pub use simulation::rollout::rollout;
 pub use synthetic::roster::build_synthetic_senate;

@@ -1,22 +1,21 @@
 use serde::Serialize;
 
 use senate_simulator::{
-    FloorActionAssessment, NextEventPrediction, SenateAnalysis, SenatorSignalSummary,
-    analyze_chamber, assess_floor_action, build_synthetic_senate, derive_stance,
+    LegislativeContext, ProceduralStage, SimulationState, SimulationStep, TerminationReason,
+    build_synthetic_senate,
     io::json::{
         load_legislative_context_from_path, load_legislative_object_from_path, to_pretty_json,
     },
-    predict_next_event,
+    rollout,
 };
 
 #[derive(Debug, Serialize)]
 struct DemoOutput {
-    roster_size: usize,
-    chamber_analysis: SenateAnalysis,
-    floor_action_assessment: FloorActionAssessment,
-    next_event_prediction: NextEventPrediction,
-    top_pivots: Vec<senate_simulator::PivotSummary>,
-    top_blockers: Vec<SenatorSignalSummary>,
+    initial_state: SimulationState,
+    final_context: LegislativeContext,
+    final_stage: ProceduralStage,
+    terminated_reason: TerminationReason,
+    steps: Vec<SimulationStep>,
 }
 
 fn main() {
@@ -29,92 +28,65 @@ fn main() {
         load_legislative_context_from_path,
     );
 
-    let roster = build_synthetic_senate();
-    let mut stances = Vec::with_capacity(roster.len());
+    let initial_state = SimulationState {
+        legislative_object,
+        context,
+        roster: build_synthetic_senate(),
+        step_index: 0,
+        last_event: None,
+        consecutive_no_movement: 0,
+        days_elapsed: 0,
+        cloture_attempts: 0,
+    };
 
-    for senator in &roster {
-        let stance = match derive_stance(senator, &legislative_object, &context) {
-            Ok(stance) => stance,
-            Err(error) => {
-                eprintln!(
-                    "Failed to derive senator stance for {}: {error}",
-                    senator.identity.senator_id
-                );
-                std::process::exit(1);
-            }
-        };
-        stances.push(stance);
-    }
-
-    let chamber_analysis = match analyze_chamber(&legislative_object, &context, &stances) {
-        Ok(analysis) => analysis,
+    let trajectory = match rollout(&initial_state, 5) {
+        Ok(trajectory) => trajectory,
         Err(error) => {
-            eprintln!("Failed to analyze chamber: {error}");
+            eprintln!("Failed to run rollout: {error}");
             std::process::exit(1);
         }
     };
-    let floor_action_assessment =
-        match assess_floor_action(&legislative_object, &context, &chamber_analysis) {
-            Ok(assessment) => assessment,
-            Err(error) => {
-                eprintln!("Failed to assess floor action: {error}");
-                std::process::exit(1);
-            }
-        };
-    let next_event_prediction =
-        match predict_next_event(&legislative_object, &context, &chamber_analysis) {
-            Ok(prediction) => prediction,
-            Err(error) => {
-                eprintln!("Failed to predict next event: {error}");
-                std::process::exit(1);
-            }
-        };
 
     println!(
-        "Synthetic Senate demo: roster={}, majority_viable={}, cloture_viable={}, predicted_action={}, next_event={}",
-        roster.len(),
-        chamber_analysis.simple_majority_viable,
-        chamber_analysis.cloture_viable,
-        floor_action_assessment.predicted_action,
-        next_event_prediction.predicted_event
+        "Synthetic Senate rollout: roster={}, steps={}, terminated={:?}",
+        initial_state.roster.len(),
+        trajectory.steps.len(),
+        trajectory.terminated_reason
     );
-    for reason in &floor_action_assessment.top_reasons {
-        println!("- {reason}");
-    }
-    println!(
-        "Most likely next event: {} ({:.2} confidence)",
-        next_event_prediction.predicted_event, next_event_prediction.confidence
-    );
-    for alternative in &next_event_prediction.alternative_events {
+    for step in &trajectory.steps {
         println!(
-            "  alt: {} {:.2} {}",
-            alternative.event, alternative.score, alternative.reason
+            "Step {}: {:?} -> {} ({:.2})",
+            step.step_index + 1,
+            step.starting_stage,
+            step.predicted_event,
+            step.confidence
         );
+        println!(
+            "  Majority viable: {} | Cloture viable: {} | Support: {}+{} | Undecided: {}",
+            step.analysis_summary.simple_majority_viable,
+            step.analysis_summary.cloture_viable,
+            step.analysis_summary.likely_support_count,
+            step.analysis_summary.lean_support_count,
+            step.analysis_summary.undecided_count
+        );
+        for reason in &step.top_reasons {
+            println!("  - {reason}");
+        }
     }
+    println!("Terminated: {:?}", trajectory.terminated_reason);
 
     let output = DemoOutput {
-        roster_size: roster.len(),
-        top_pivots: chamber_analysis
-            .pivotal_senators
-            .iter()
-            .take(5)
-            .cloned()
-            .collect(),
-        top_blockers: chamber_analysis
-            .likely_blockers
-            .iter()
-            .take(5)
-            .cloned()
-            .collect(),
-        chamber_analysis,
-        floor_action_assessment,
-        next_event_prediction,
+        initial_state,
+        final_context: trajectory.final_state.context.clone(),
+        final_stage: trajectory.final_state.context.procedural_stage.clone(),
+        terminated_reason: trajectory.terminated_reason.clone(),
+        steps: trajectory.steps.clone(),
     };
 
     match to_pretty_json(&output) {
         Ok(json) => println!("{json}"),
         Err(error) => {
-            eprintln!("Failed to serialize demo output: {error}");
+            eprintln!("Failed to serialize rollout output: {error}");
             std::process::exit(1);
         }
     }

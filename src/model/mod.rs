@@ -11,4 +11,7 @@ pub mod senate_analysis;
 pub mod senate_event;
 pub mod senator;
 pub mod senator_stance;
+pub mod simulation_state;
+pub mod simulation_step;
 pub mod structural;
+pub mod trajectory_result;
